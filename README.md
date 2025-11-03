@@ -83,6 +83,39 @@ For development with auto-reload:
 npm run dev
 ```
 
+## Quick Deploy to Replit
+
+This repository is ready for one-click deployment to Replit:
+
+1. **Import to Replit**:
+   - Go to [Replit](https://replit.com)
+   - Click "Create Repl"
+   - Select "Import from GitHub"
+   - Paste: `https://github.com/edmundtafadzwa-commits/freshroute`
+
+2. **Configure Environment**:
+   - The project will auto-detect Node.js
+   - Environment variables are pre-configured for development
+   - Optionally, add your SMS gateway credentials in the Secrets tab:
+     - `SMS_GATEWAY_API_KEY`
+     - `SMS_GATEWAY_URL`
+
+3. **Run**:
+   - Click the "Run" button
+   - Server will start on port 3000
+   - Access API at: `https://your-repl-name.your-username.repl.co`
+
+4. **Test the API**:
+   ```bash
+   # Health check
+   curl https://your-repl-name.your-username.repl.co/health
+   
+   # List drivers
+   curl https://your-repl-name.your-username.repl.co/api/drivers
+   ```
+
+**Note**: Replit provides a publicly accessible URL automatically. The WebSocket connection will work with the same URL.
+
 ## Running Tests
 
 Run the test suite:
