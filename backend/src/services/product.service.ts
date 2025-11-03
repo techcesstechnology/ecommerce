@@ -17,9 +17,21 @@ export class ProductService {
   private redisClient: RedisClientType | null = null;
   private cacheEnabled = false;
   private cacheTTL = 300; // 5 minutes
+  private redisInitialized = false;
+  private redisInitPromise: Promise<void> | null = null;
 
   constructor() {
-    this.initializeRedis();
+    this.redisInitPromise = this.initializeRedis();
+  }
+
+  /**
+   * Ensure Redis is initialized before using it
+   */
+  private async ensureRedisInitialized(): Promise<void> {
+    if (this.redisInitialized) return;
+    if (this.redisInitPromise) {
+      await this.redisInitPromise;
+    }
   }
 
   /**
@@ -30,6 +42,7 @@ export class ProductService {
     if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
       console.log('Skipping Redis initialization in test environment');
       this.cacheEnabled = false;
+      this.redisInitialized = true;
       return;
     }
 
@@ -50,9 +63,11 @@ export class ProductService {
       });
 
       await this.redisClient.connect();
+      this.redisInitialized = true;
     } catch (error) {
       console.error('Failed to initialize Redis:', error);
       this.cacheEnabled = false;
+      this.redisInitialized = true;
     }
   }
 
@@ -60,6 +75,7 @@ export class ProductService {
    * Get from cache
    */
   private async getFromCache<T>(key: string): Promise<T | null> {
+    await this.ensureRedisInitialized();
     if (!this.cacheEnabled || !this.redisClient) return null;
 
     try {
@@ -75,6 +91,7 @@ export class ProductService {
    * Set to cache
    */
   private async setToCache(key: string, value: any, ttl: number = this.cacheTTL): Promise<void> {
+    await this.ensureRedisInitialized();
     if (!this.cacheEnabled || !this.redisClient) return;
 
     try {
@@ -85,15 +102,29 @@ export class ProductService {
   }
 
   /**
-   * Invalidate cache
+   * Invalidate cache using SCAN for better performance
    */
   private async invalidateCache(pattern: string): Promise<void> {
+    await this.ensureRedisInitialized();
     if (!this.cacheEnabled || !this.redisClient) return;
 
     try {
-      const keys = await this.redisClient.keys(pattern);
-      if (keys.length > 0) {
-        await this.redisClient.del(keys);
+      // Use SCAN instead of KEYS for better performance
+      let cursor = 0;
+      const keysToDelete: string[] = [];
+
+      do {
+        const result = await this.redisClient.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100
+        });
+        
+        cursor = result.cursor;
+        keysToDelete.push(...result.keys);
+      } while (cursor !== 0);
+
+      if (keysToDelete.length > 0) {
+        await this.redisClient.del(keysToDelete);
       }
     } catch (error) {
       console.error('Cache invalidation error:', error);
