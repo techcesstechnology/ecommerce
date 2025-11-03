@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.env
+.DS_Store
+coverage/
+*.test.ts.snap
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
