@@ -58,6 +58,19 @@ createdb freshroute_dev
 npm run migrate
 ```
 
+## Scripts
+
+### Test database connection
+```bash
+npm run test:connection
+```
+
+### Run CRUD examples
+```bash
+npm run example:crud
+```
+Note: This requires a working database connection and completed migrations.
+
 ## Database Migrations
 
 ### Run all pending migrations
