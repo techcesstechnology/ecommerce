@@ -84,6 +84,16 @@ export class ImageService {
     files: Express.Multer.File[],
     productId: string
   ): Promise<ProductImage[]> {
+    // Validate files is an array and limit the number
+    if (!Array.isArray(files)) {
+      throw new Error('Files must be an array');
+    }
+
+    const maxFiles = 10;
+    if (files.length > maxFiles) {
+      throw new Error(`Maximum ${maxFiles} images allowed`);
+    }
+
     const images: ProductImage[] = [];
     
     for (let i = 0; i < files.length; i++) {

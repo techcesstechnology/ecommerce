@@ -2,8 +2,12 @@ import { Router } from 'express';
 import multer from 'multer';
 import { productController } from '../controllers/product.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
+import { apiLimiter, mutationLimiter } from '../middleware/rate-limit.middleware';
 
 const router = Router();
+
+// Apply general rate limiting to all routes
+router.use(apiLimiter);
 
 // Configure multer for image uploads
 const upload = multer({
@@ -187,6 +191,7 @@ router.get('/:id', productController.getProductById.bind(productController));
  */
 router.post(
   '/',
+  mutationLimiter,
   authenticate,
   authorize('ADMIN', 'MANAGER'),
   productController.createProduct.bind(productController)
@@ -220,6 +225,7 @@ router.post(
  */
 router.put(
   '/:id',
+  mutationLimiter,
   authenticate,
   authorize('ADMIN', 'MANAGER'),
   productController.updateProduct.bind(productController)
@@ -247,6 +253,7 @@ router.put(
  */
 router.delete(
   '/:id',
+  mutationLimiter,
   authenticate,
   authorize('ADMIN', 'MANAGER'),
   productController.archiveProduct.bind(productController)
@@ -284,6 +291,7 @@ router.delete(
  */
 router.post(
   '/:id/images',
+  mutationLimiter,
   authenticate,
   authorize('ADMIN', 'MANAGER'),
   upload.array('images', 10),
@@ -323,6 +331,7 @@ router.post(
  */
 router.post(
   '/categories',
+  mutationLimiter,
   authenticate,
   authorize('ADMIN', 'MANAGER'),
   productController.createCategory.bind(productController)

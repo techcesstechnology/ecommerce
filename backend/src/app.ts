@@ -23,9 +23,22 @@ class App {
   }
 
   private initializeMiddlewares(): void {
-    // CORS
+    // CORS - restrictive by default
+    const allowedOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : ['http://localhost:3000', 'http://localhost:3001'];
+
     this.app.use(cors({
-      origin: process.env.CORS_ORIGIN || '*',
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true
     }));
 
