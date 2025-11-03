@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { Location, DeliveryStatus } from '../types';
+import { Location, DeliveryStatus, DriverStatus } from '../types';
 import trackingService from '../delivery/services/tracking.service';
 import deliveryService from '../delivery/services/delivery.service';
 import driverService from '../delivery/services/driver.service';
@@ -126,10 +126,16 @@ export class LocationHandler {
     try {
       const { driverId, status, isAvailable } = data;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Validate status is a valid DriverStatus enum value
+      const validStatuses = ['available', 'on_delivery', 'offline', 'break'];
+      if (!validStatuses.includes(status)) {
+        socket.emit('error', { message: 'Invalid driver status' });
+        return;
+      }
+
       const driver = driverService.updateDriverStatus(
         driverId,
-        status as any,
+        status as unknown as DriverStatus,
         isAvailable
       );
 
