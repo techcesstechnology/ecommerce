@@ -13,21 +13,44 @@ dotenv.config();
 const app: Application = express();
 const server = http.createServer(app);
 
-// Configure CORS based on environment
+// Configure CORS based on environment - in production, MUST specify ALLOWED_ORIGINS
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:3000', 'http://localhost:3001'];
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : (process.env.NODE_ENV === 'production' 
+      ? [] // Empty array in production if ALLOWED_ORIGINS not set (will reject all)
+      : ['http://localhost:3000', 'http://localhost:3001']); // Development defaults
+
+// CORS origin checker function
+const corsOriginChecker = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  // Allow requests with no origin (like mobile apps or Postman)
+  if (!origin) {
+    return callback(null, true);
+  }
+  
+  // In development, allow all origins
+  if (process.env.NODE_ENV !== 'production') {
+    return callback(null, true);
+  }
+  
+  // In production, check against whitelist
+  if (allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+};
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
+    origin: corsOriginChecker,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : '*',
+  origin: corsOriginChecker,
   credentials: true,
 }));
 app.use(express.json());
