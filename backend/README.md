@@ -50,6 +50,11 @@ POST   /api/payments/initialize - Initialize payment
 POST   /api/payments/verify    - Verify payment status
 ```
 
+#### Invoice Endpoints
+```
+GET    /api/invoices/:id       - Generate and download invoice PDF
+```
+
 ## Technology Stack
 
 - **Runtime**: Node.js with TypeScript

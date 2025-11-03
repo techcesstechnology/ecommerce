@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { cartController } from '../cart/cart.controller';
 import { orderController } from '../orders/order.controller';
 import { paymentController } from '../payments/payment.controller';
+import { invoiceController } from '../invoices/invoice.controller';
 
 const router = Router();
 
@@ -20,5 +21,8 @@ router.put('/api/orders/:id/status', (req, res) => orderController.updateOrderSt
 // Payment routes
 router.post('/api/payments/initialize', (req, res) => paymentController.initializePayment(req, res));
 router.post('/api/payments/verify', (req, res) => paymentController.verifyPayment(req, res));
+
+// Invoice routes
+router.get('/api/invoices/:id', (req, res) => invoiceController.generateInvoice(req, res));
 
 export default router;

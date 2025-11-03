@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../types';
 
 export function errorHandler(
   err: Error,
   _req: Request,
-  res: Response
+  res: Response,
+  _next: NextFunction
 ): void {
   console.error('Error:', err);
 
