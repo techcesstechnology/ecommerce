@@ -66,7 +66,7 @@ module.exports = {
       name: 'drivers_email_unique',
       where: {
         email: {
-          [Sequelize.Op.ne]: null
+          [Sequelize.Op.not]: null
         }
       }
     });

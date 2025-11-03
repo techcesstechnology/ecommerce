@@ -1,5 +1,10 @@
 const { Model, DataTypes } = require('sequelize');
 
+// Note: OrderItem does not use soft delete (paranoid mode) because it represents
+// a permanent historical record of what was purchased in an order. This is important
+// for audit trails, tax records, and financial reporting. When an order is deleted,
+// its items are cascade deleted, which is appropriate for this relationship.
+
 module.exports = (sequelize) => {
   class OrderItem extends Model {
     static associate(models) {

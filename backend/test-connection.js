@@ -100,7 +100,11 @@ async function testConnection() {
     console.error('3. .env file is configured with correct credentials');
     process.exit(1);
   } finally {
-    await db.sequelize.close();
+    try {
+      await db.sequelize.close();
+    } catch (closeError) {
+      console.error('Error closing database connection:', closeError.message);
+    }
   }
 }
 
