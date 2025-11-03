@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { authConfig, UserRole } from '../../config/auth.config';
 import { TokenService } from './token.service';
 
@@ -259,14 +260,14 @@ export class AuthService {
    * Helper: Generate unique ID
    */
   private static generateId(): string {
-    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `user_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
   }
 
   /**
    * Helper: Generate random token
    */
   private static generateToken(): string {
-    return Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
+    return crypto.randomBytes(32).toString('hex');
   }
 
   /**
