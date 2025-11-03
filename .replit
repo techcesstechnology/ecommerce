@@ -1,0 +1,14 @@
+run = "npm install && npm run build && npm start"
+language = "nodejs"
+entrypoint = "backend/src/index.ts"
+
+[env]
+PORT = "3000"
+NODE_ENV = "development"
+
+[nix]
+channel = "stable-22_11"
+
+[deployment]
+run = ["sh", "-c", "npm install && npm run build && npm start"]
+deploymentTarget = "cloudrun"
