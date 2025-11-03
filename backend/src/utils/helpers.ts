@@ -1,5 +1,6 @@
 import { Currency } from '../types';
 import { config } from '../config';
+import { randomInt } from 'crypto';
 
 export function convertCurrency(
   amount: number,
@@ -23,19 +24,19 @@ export function convertCurrency(
 
 export function generateOrderId(): string {
   const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
+  const random = randomInt(10000);
   return `ORD-${timestamp}-${random}`;
 }
 
 export function generatePaymentId(): string {
   const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
+  const random = randomInt(10000);
   return `PAY-${timestamp}-${random}`;
 }
 
 export function generateTrackingNumber(): string {
   const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000000);
+  const random = randomInt(1000000);
   return `TRK${timestamp}${random}`;
 }
 
