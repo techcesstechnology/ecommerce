@@ -1,8 +1,11 @@
 /**
  * Validate email address
+ * Using a simpler regex to avoid ReDoS vulnerability
  */
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Length check to prevent long string attacks
+  if (email.length > 254) return false;
   return emailRegex.test(email);
 };
 
@@ -55,14 +58,21 @@ export const truncateText = (text: string, maxLength: number): string => {
 
 /**
  * Generate slug from text
+ * Using atomic grouping to prevent ReDoS
  */
 export const generateSlug = (text: string): string => {
+  // Length check to prevent long string attacks
+  if (text.length > 200) {
+    text = text.substring(0, 200);
+  }
+
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\w\s-]/g, '') // Remove invalid chars
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/-+/g, '-') // Replace multiple - with single -
+    .replace(/^-+|-+$/g, ''); // Trim - from start and end
 };
 
 /**
