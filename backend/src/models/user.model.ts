@@ -70,12 +70,13 @@ export class User {
 
   /**
    * Hash password before update if it was changed
+   * Note: This will only hash if password was explicitly changed.
+   * TypeORM does not call BeforeUpdate hooks if the entity was not modified.
    */
   @BeforeUpdate()
   async hashPasswordBeforeUpdate() {
-    // Only hash if password field was explicitly set/changed
-    // This prevents re-hashing an already hashed password
-    if (this.password && !this.password.startsWith('$2')) {
+    // Skip if password is already hashed (bcrypt hashes are 60 characters)
+    if (this.password && this.password.length !== 60) {
       this.password = await bcrypt.hash(this.password, SALT_ROUNDS);
     }
   }

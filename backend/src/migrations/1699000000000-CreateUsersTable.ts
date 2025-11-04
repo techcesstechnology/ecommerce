@@ -18,7 +18,7 @@ export class CreateUsersTable1699000000000 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
           },
           {
             name: 'email',
@@ -98,8 +98,9 @@ export class CreateUsersTable1699000000000 implements MigrationInterface {
       })
     );
 
-    // Enable UUID extension if not already enabled
-    await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+    // Enable UUID extension if not already enabled (for PostgreSQL < 13)
+    // PostgreSQL 13+ has gen_random_uuid() built-in
+    await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
