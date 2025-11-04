@@ -16,7 +16,7 @@
     "install:mobile": "cd mobile && npm install",
     "install:shared": "cd shared && npm install",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
+    "dev:backend": "cd backend && BACKEND_PORT=3000 npm run dev",
     "dev:frontend": "cd frontend && npm start",
     "dev:mobile": "cd mobile && npm start",
     "build": "npm run build:shared && npm run build:backend && npm run build:frontend",

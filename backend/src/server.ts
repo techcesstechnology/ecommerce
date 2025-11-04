@@ -10,7 +10,7 @@ import healthRoutes from './routes/health.routes';
 dotenv.config({ path: '../.env' });
 
 const app: Application = express();
-const PORT = Number(process.env.BACKEND_PORT) || 3000;
+const PORT = Number(process.env.PORT || process.env.BACKEND_PORT) || 5000;
 
 // Middleware
 app.use(helmet()); // Security headers
