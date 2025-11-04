@@ -10,7 +10,7 @@ import healthRoutes from './routes/health.routes';
 dotenv.config({ path: '../.env' });
 
 const app: Application = express();
-const PORT = process.env.BACKEND_PORT || 5000;
+const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -73,8 +73,8 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+  app.listen(PORT, 'localhost', () => {
+    console.log(`🚀 Server running on localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
