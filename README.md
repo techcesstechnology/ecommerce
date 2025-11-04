@@ -245,9 +245,16 @@ This project is licensed under the MIT License.
 
 FreshRoute Team - Building the future of e-commerce in Zimbabwe
 
+## 📚 Documentation
+
+- **[API Documentation](./API_DOCUMENTATION.md)** - Complete REST API reference
+- **Backend** - [Backend README](./backend/README.md)
+- **Frontend** - [Frontend README](./frontend/README.md)
+- **Mobile** - [Mobile README](./mobile/README.md)
+- **Shared** - [Shared Library README](./shared/README.md)
+
 ## 🔗 Links
 
-- [Documentation](./docs)
 - [Issue Tracker](https://github.com/edmundtafadzwa-commits/freshroute/issues)
 - [Changelog](./CHANGELOG.md)
 
