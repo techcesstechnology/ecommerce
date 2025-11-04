@@ -220,14 +220,17 @@ export class ProductService {
     const created: Product[] = [];
     const errors: Array<{ index: number; sku: string; error: string }> = [];
 
-    for (let i = 0; i < productsData.length; i++) {
+    // Ensure productsData is always an array
+    const dataArray = Array.isArray(productsData) ? productsData : [productsData];
+
+    for (let i = 0; i < dataArray.length; i++) {
       try {
-        const product = await this.createProduct(productsData[i]);
+        const product = await this.createProduct(dataArray[i]);
         created.push(product);
       } catch (error) {
         errors.push({
           index: i,
-          sku: productsData[i].sku,
+          sku: dataArray[i].sku,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
