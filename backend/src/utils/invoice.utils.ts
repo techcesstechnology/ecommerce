@@ -1,6 +1,18 @@
 import { Order } from '../models/order.model';
 
 /**
+ * Escape HTML to prevent XSS attacks
+ */
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+/**
  * Generate invoice PDF (mock implementation)
  * In production, use a library like pdfkit or puppeteer
  */
@@ -11,14 +23,14 @@ export const generateInvoicePDF = async (order: Order): Promise<Buffer> => {
 };
 
 /**
- * Generate invoice HTML
+ * Generate invoice HTML with XSS protection
  */
 export const generateInvoiceHTML = (order: Order): string => {
   const itemsHTML = order.items
     .map(
       (item) => `
     <tr>
-      <td>${item.productName}</td>
+      <td>${escapeHtml(item.productName)}</td>
       <td>${item.quantity}</td>
       <td>$${item.price.toFixed(2)}</td>
       <td>$${item.subtotal.toFixed(2)}</td>
@@ -32,7 +44,7 @@ export const generateInvoiceHTML = (order: Order): string => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Invoice #${order.orderNumber}</title>
+  <title>Invoice #${escapeHtml(order.orderNumber)}</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .header { text-align: center; margin-bottom: 30px; }
@@ -51,18 +63,18 @@ export const generateInvoiceHTML = (order: Order): string => {
   </div>
   
   <div class="invoice-details">
-    <p><strong>Invoice Number:</strong> ${order.orderNumber}</p>
+    <p><strong>Invoice Number:</strong> ${escapeHtml(order.orderNumber)}</p>
     <p><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
-    <p><strong>Order Status:</strong> ${order.status.toUpperCase()}</p>
+    <p><strong>Order Status:</strong> ${escapeHtml(order.status.toUpperCase())}</p>
   </div>
 
   <h3>Shipping Address</h3>
   <p>
-    ${order.shippingAddress.fullName}<br>
-    ${order.shippingAddress.addressLine1}<br>
-    ${order.shippingAddress.addressLine2 ? order.shippingAddress.addressLine2 + '<br>' : ''}
-    ${order.shippingAddress.city}, ${order.shippingAddress.province}<br>
-    ${order.shippingAddress.country}
+    ${escapeHtml(order.shippingAddress.fullName)}<br>
+    ${escapeHtml(order.shippingAddress.addressLine1)}<br>
+    ${order.shippingAddress.addressLine2 ? escapeHtml(order.shippingAddress.addressLine2) + '<br>' : ''}
+    ${escapeHtml(order.shippingAddress.city)}, ${escapeHtml(order.shippingAddress.province)}<br>
+    ${escapeHtml(order.shippingAddress.country)}
   </p>
 
   <h3>Order Items</h3>
@@ -105,7 +117,7 @@ export const generateInvoiceHTML = (order: Order): string => {
     </tr>
     <tr style="font-size: 1.2em; border-top: 2px solid #333;">
       <td>Total:</td>
-      <td>${order.currency} $${order.total.toFixed(2)}</td>
+      <td>${escapeHtml(order.currency)} $${order.total.toFixed(2)}</td>
     </tr>
   </table>
 
