@@ -7,11 +7,14 @@ import { v4 as uuidv4 } from 'uuid';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Get upload directory from environment or use default
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads');
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    // Store in uploads directory (ensure this directory exists)
-    cb(null, path.join(__dirname, '../../uploads'));
+    // Store in configured uploads directory
+    cb(null, UPLOAD_DIR);
   },
   filename: (_req, file, cb) => {
     // Generate unique filename
@@ -58,7 +61,7 @@ export const getImageUrl = (filename: string, req: Request): string => {
  */
 export const deleteImage = async (filename: string): Promise<boolean> => {
   const fs = await import('fs/promises');
-  const filePath = path.join(__dirname, '../../uploads', filename);
+  const filePath = path.join(UPLOAD_DIR, filename);
 
   try {
     await fs.unlink(filePath);

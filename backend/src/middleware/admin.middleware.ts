@@ -13,13 +13,24 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * Middleware to check if user is an admin
- * Note: This is a simplified version. In production, implement proper JWT authentication
+ *
+ * ⚠️ SECURITY WARNING: This is a simplified development-only authentication!
+ *
+ * This middleware uses a simple header check for admin authentication.
+ * DO NOT USE IN PRODUCTION without implementing proper JWT authentication.
+ *
+ * Production requirements:
+ * - Implement JWT token validation
+ * - Add token expiration checks
+ * - Implement refresh token mechanism
+ * - Add rate limiting
+ * - Log authentication attempts
  */
 export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const authReq = req as AuthenticatedRequest;
 
-  // TODO: Implement proper JWT authentication
-  // For now, check for admin header (this is just for development)
+  // TODO: Replace with proper JWT authentication
+  // For now, check for admin header (DEVELOPMENT ONLY)
   const adminHeader = req.headers['x-admin-role'];
 
   if (adminHeader === 'admin') {

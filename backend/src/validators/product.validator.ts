@@ -14,11 +14,11 @@ export const productValidators = {
       .withMessage('Product description is required')
       .isLength({ min: 10 })
       .withMessage('Product description must be at least 10 characters'),
-    body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+    body('price').isFloat({ min: 0 }).withMessage('Price must be a non-negative number'),
     body('comparePrice')
       .optional()
       .isFloat({ min: 0 })
-      .withMessage('Compare price must be a positive number'),
+      .withMessage('Compare price must be a non-negative number'),
     body('category').trim().notEmpty().withMessage('Category is required'),
     body('stock').isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
     body('sku')
@@ -86,11 +86,11 @@ export const productValidators = {
     query('minPrice')
       .optional()
       .isFloat({ min: 0 })
-      .withMessage('Min price must be a positive number'),
+      .withMessage('Min price must be a non-negative number'),
     query('maxPrice')
       .optional()
       .isFloat({ min: 0 })
-      .withMessage('Max price must be a positive number'),
+      .withMessage('Max price must be a non-negative number'),
     query('search').optional().isString().withMessage('Search must be a string'),
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit')

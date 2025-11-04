@@ -35,15 +35,18 @@ export class ProductService {
     }
 
     if (filters.minPrice !== undefined) {
-      products = products.filter((p) => p.price >= filters.minPrice!);
+      const minPrice = filters.minPrice;
+      products = products.filter((p) => p.price >= minPrice);
     }
 
     if (filters.maxPrice !== undefined) {
-      products = products.filter((p) => p.price <= filters.maxPrice!);
+      const maxPrice = filters.maxPrice;
+      products = products.filter((p) => p.price <= maxPrice);
     }
 
     if (filters.tags && filters.tags.length > 0) {
-      products = products.filter((p) => filters.tags!.some((tag) => p.tags.includes(tag)));
+      const tags = filters.tags;
+      products = products.filter((p) => tags.some((tag) => p.tags.includes(tag)));
     }
 
     if (filters.search) {
