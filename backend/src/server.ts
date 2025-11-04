@@ -16,9 +16,15 @@ const PORT = Number(process.env.BACKEND_PORT) || 3000;
 app.use(helmet()); // Security headers
 
 // CORS configuration
+const defaultOrigins = ['http://localhost:5000', 'http://localhost:19006'];
+
+if (process.env.REPLIT_DEV_DOMAIN) {
+  defaultOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+}
+
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:19006'];
+  : defaultOrigins;
 
 app.use(
   cors({
@@ -73,8 +79,8 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, 'localhost', () => {
-    console.log(`🚀 Server running on localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
