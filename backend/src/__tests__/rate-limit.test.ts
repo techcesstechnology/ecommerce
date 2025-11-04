@@ -6,7 +6,11 @@
 
 import request from 'supertest';
 import express, { Application } from 'express';
-import { loginRateLimiter, registrationRateLimiter, generalRateLimiter } from '../middleware/rate-limit.middleware';
+import {
+  loginRateLimiter,
+  registrationRateLimiter,
+  generalRateLimiter,
+} from '../middleware/rate-limit.middleware';
 
 describe('Rate Limiting Middleware', () => {
   let app: Application;
@@ -24,18 +28,14 @@ describe('Rate Limiting Middleware', () => {
     });
 
     it('should allow requests within the rate limit', async () => {
-      const response = await request(app)
-        .post('/test-login')
-        .send({ test: 'data' });
+      const response = await request(app).post('/test-login').send({ test: 'data' });
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Success');
     });
 
     it('should include rate limit headers', async () => {
-      const response = await request(app)
-        .post('/test-login')
-        .send({ test: 'data' });
+      const response = await request(app).post('/test-login').send({ test: 'data' });
 
       expect(response.headers).toHaveProperty('ratelimit-limit');
       expect(response.headers).toHaveProperty('ratelimit-remaining');
@@ -51,9 +51,7 @@ describe('Rate Limiting Middleware', () => {
     });
 
     it('should allow requests within the rate limit', async () => {
-      const response = await request(app)
-        .post('/test-register')
-        .send({ test: 'data' });
+      const response = await request(app).post('/test-register').send({ test: 'data' });
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Success');
