@@ -35,3 +35,5 @@ export const generateRandomString = (length: number): string => {
   }
   return result;
 };
+
+export * from './image-upload.util';
