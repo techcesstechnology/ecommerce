@@ -1,4 +1,3 @@
-// Placeholder for services (business logic)
-// TODO: Add service layer implementations here
-
-export {};
+export * from './product.service';
+export * from './category.service';
+export * from './admin.service';

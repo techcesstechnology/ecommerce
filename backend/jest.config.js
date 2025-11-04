@@ -15,4 +15,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleNameMapper: {
+    '^uuid$': '<rootDir>/__mocks__/uuid.ts',
+  },
 };

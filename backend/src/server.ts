@@ -4,13 +4,24 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import healthRoutes from './routes/health.routes';
+import productRoutes from './routes/product.routes';
+import categoryRoutes from './routes/category.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Load environment variables
 dotenv.config({ path: '../.env' });
 
 const app: Application = express();
 const PORT = process.env.BACKEND_PORT || 5000;
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -40,8 +51,14 @@ app.use(morgan('combined')); // Logging
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadsDir));
+
 // Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -50,6 +67,9 @@ app.get('/', (_req: Request, res: Response) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
+      products: '/api/products',
+      categories: '/api/categories',
+      admin: '/api/admin',
     },
   });
 });
