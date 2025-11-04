@@ -341,7 +341,7 @@ export class OrderService {
     if (order.status === 'delivered') {
       history.push({
         status: 'delivered',
-        timestamp: order.deliveredAt,
+        timestamp: order.deliveredAt || order.updatedAt,
         description: 'Order delivered',
       });
     }
@@ -349,7 +349,7 @@ export class OrderService {
     if (order.status === 'cancelled') {
       history.push({
         status: 'cancelled',
-        timestamp: order.cancelledAt,
+        timestamp: order.cancelledAt || order.updatedAt,
         description: 'Order cancelled',
       });
     }

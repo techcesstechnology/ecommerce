@@ -78,12 +78,12 @@ export class PaymentService {
       throw new Error('Transaction not found');
     }
 
-    if (transaction.status !== 'completed') {
-      throw new Error('Can only refund completed transactions');
-    }
-
     if (transaction.status === 'refunded') {
       throw new Error('Transaction already refunded');
+    }
+
+    if (transaction.status !== 'completed') {
+      throw new Error('Can only refund completed transactions');
     }
 
     // Mock refund processing

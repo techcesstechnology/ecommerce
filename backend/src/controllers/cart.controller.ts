@@ -8,7 +8,7 @@ import { sendCartShareEmail } from '../utils/notification.utils';
  */
 export const getCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
 
     const cart = await cartService.getCart(sessionId, userId);
@@ -24,7 +24,7 @@ export const getCart = async (req: Request, res: Response): Promise<void> => {
  */
 export const addToCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { productId, quantity } = req.body;
 
@@ -41,7 +41,7 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
  */
 export const updateCartItem = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { itemId } = req.params;
     const { quantity } = req.body;
@@ -59,7 +59,7 @@ export const updateCartItem = async (req: Request, res: Response): Promise<void>
  */
 export const removeCartItem = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { itemId } = req.params;
 
@@ -76,7 +76,7 @@ export const removeCartItem = async (req: Request, res: Response): Promise<void>
  */
 export const clearCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
 
     const cart = await cartService.clearCart(sessionId, userId);
@@ -92,7 +92,7 @@ export const clearCart = async (req: Request, res: Response): Promise<void> => {
  */
 export const applyDiscount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { code } = req.body;
 
@@ -109,7 +109,7 @@ export const applyDiscount = async (req: Request, res: Response): Promise<void> 
  */
 export const removeDiscount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
 
     const cart = await cartService.removeDiscount(sessionId, userId);
@@ -125,7 +125,7 @@ export const removeDiscount = async (req: Request, res: Response): Promise<void>
  */
 export const getCartSummary = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
 
     const summary = await cartService.getCartSummary(sessionId, userId);
@@ -141,7 +141,7 @@ export const getCartSummary = async (req: Request, res: Response): Promise<void>
  */
 export const saveForLater = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { itemId } = req.params;
 
@@ -183,7 +183,7 @@ export const getSavedItems = async (req: Request, res: Response): Promise<void> 
  */
 export const moveToCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { itemId } = req.params;
 
@@ -205,7 +205,7 @@ export const moveToCart = async (req: Request, res: Response): Promise<void> => 
  */
 export const shareCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const sessionId = (req.headers['x-session-id'] as string) || req.sessionID || 'guest';
+    const sessionId = (req.headers['x-session-id'] as string) || 'guest';
     const userId = req.headers['x-user-id'] as string;
     const { email, message } = req.body;
 
