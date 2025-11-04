@@ -173,15 +173,15 @@ Key configuration in `app.json`:
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "zw.freshroute.app",
+      "bundleIdentifier": "com.freshroute.mobile",
       "buildNumber": "1"
     },
     "android": {
-      "package": "zw.freshroute.app",
+      "package": "com.freshroute.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#00a651"
+        "backgroundColor": "#ffffff"
       }
     }
   }

@@ -302,23 +302,6 @@ If you encounter issues:
    - Expected vs actual behavior
    - Environment details (OS, Node version, etc.)
 
-## 🚢 Deployment
-
-### Backend
-
-The backend can be deployed to any Node.js hosting platform (Heroku, AWS, DigitalOcean, etc.)
-
-### Frontend
-
-The frontend can be deployed to static hosting services (Vercel, Netlify, AWS S3, etc.)
-
-### Mobile
-
-The mobile app can be built and deployed to:
-
-- **iOS:** App Store (requires Apple Developer account)
-- **Android:** Google Play Store
-
 ## 🤝 Contributing
 
 We welcome contributions from the community! Here's how you can help:
