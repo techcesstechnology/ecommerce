@@ -4,8 +4,10 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import 'reflect-metadata'; // Required for TypeORM decorators
 import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
+import { initializeDatabase } from './config/database.config';
 
 // Load environment variables
 dotenv.config({ path: '../.env' });
@@ -76,10 +78,18 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+  // Initialize database connection before starting server
+  initializeDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+    })
+    .catch((error) => {
+      console.error('Failed to initialize database:', error);
+      process.exit(1);
+    });
 }
 
 export default app;

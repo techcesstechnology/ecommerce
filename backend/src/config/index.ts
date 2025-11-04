@@ -15,6 +15,14 @@ export const config = {
     password: process.env.DB_PASSWORD || '',
   },
 
+  testDatabase: {
+    host: process.env.TEST_DB_HOST || 'localhost',
+    port: parseInt(process.env.TEST_DB_PORT || '5432', 10),
+    name: process.env.TEST_DB_NAME || 'freshroute_test_db',
+    user: process.env.TEST_DB_USER || 'postgres',
+    password: process.env.TEST_DB_PASSWORD || '',
+  },
+
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -24,6 +32,21 @@ export const config = {
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
+
+  rateLimit: {
+    login: {
+      max: parseInt(process.env.RATE_LIMIT_LOGIN_MAX || '5', 10),
+      windowMs: parseInt(process.env.RATE_LIMIT_LOGIN_WINDOW || '900000', 10), // 15 minutes
+    },
+    registration: {
+      max: parseInt(process.env.RATE_LIMIT_REGISTER_MAX || '3', 10),
+      windowMs: parseInt(process.env.RATE_LIMIT_REGISTER_WINDOW || '3600000', 10), // 1 hour
+    },
+    general: {
+      max: parseInt(process.env.RATE_LIMIT_GENERAL_MAX || '100', 10),
+      windowMs: parseInt(process.env.RATE_LIMIT_GENERAL_WINDOW || '900000', 10), // 15 minutes
+    },
   },
 
   cors: {
