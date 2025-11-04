@@ -187,6 +187,49 @@ shared/
 └── package.json
 ```
 
+## ✨ Features
+
+### Product Management System
+
+- **Comprehensive Product CRUD**: Create, read, update, and delete products with full details
+- **Inventory Tracking**: Real-time stock management with low stock alerts
+- **Category Management**: Hierarchical product categorization
+- **Advanced Search**: Full-text search with filters (category, status, price range, tags)
+- **Bulk Operations**: Batch create, update, delete, and stock adjustments
+- **Product Variants**: Support for SKU, pricing, images, specifications
+- **Status Workflow**: Draft, published, and archived product states
+
+### Admin Dashboard
+
+- **Real-time Analytics**: Dashboard with key metrics and insights
+- **Product Manager**: Intuitive interface for managing product catalog
+- **Order Management**: Track and manage customer orders
+- **Category Manager**: Visual category organization
+- **Sales Analytics**: Revenue tracking and product performance
+- **Inventory Alerts**: Automatic notifications for low/out-of-stock items
+- **Settings Panel**: Configure store settings, tax, and shipping
+
+### Order Management
+
+- **Order Processing**: Complete order lifecycle from creation to fulfillment
+- **Automatic Stock Updates**: Stock deduction on order and restoration on cancellation
+- **Payment Tracking**: Monitor payment status and methods
+- **Order Statistics**: Comprehensive reporting and analytics
+- **Customer Management**: Track customer orders and details
+
+### API Features
+
+- **RESTful API**: Well-structured endpoints following REST principles
+- **Type-Safe**: Full TypeScript implementation with strict typing
+- **Validation**: Request validation with express-validator
+- **Error Handling**: Consistent error responses
+- **Pagination**: Efficient data loading with cursor-based pagination
+- **Filtering & Sorting**: Flexible query parameters
+- **Authentication**: Role-based access control (RBAC)
+- **Audit Logging**: Track admin actions and changes
+
+For detailed information about the Product Management System, see [PRODUCT_MANAGEMENT_GUIDE.md](./PRODUCT_MANAGEMENT_GUIDE.md).
+
 ## 🔧 Development
 
 ### Code Quality
@@ -255,24 +298,28 @@ See [Mobile README](./mobile/README.md#publishing) for detailed publishing instr
 ### Common Issues
 
 **Issue:** Port 5000 already in use
+
 ```bash
 # Solution: Change the port in .env
 BACKEND_PORT=5001
 ```
 
 **Issue:** Database connection error
+
 ```bash
 # Solution: Ensure PostgreSQL is running and credentials are correct
 # Check backend logs for specific error messages
 ```
 
 **Issue:** CORS errors in frontend
+
 ```bash
 # Solution: Add frontend URL to CORS_ORIGIN in .env
 CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 ```
 
 **Issue:** Module not found errors
+
 ```bash
 # Solution: Reinstall dependencies
 npm install
@@ -280,12 +327,14 @@ npm run install-all
 ```
 
 **Issue:** TypeScript compilation errors
+
 ```bash
 # Solution: Rebuild shared package first
 npm run build:shared
 ```
 
 **Issue:** Expo app won't connect
+
 ```bash
 # Solution: Ensure devices are on same network
 # Try using tunnel mode: expo start --tunnel
@@ -294,6 +343,7 @@ npm run build:shared
 ### Getting Help
 
 If you encounter issues:
+
 1. Check the [documentation](./API_DOCUMENTATION.md)
 2. Search existing [GitHub Issues](https://github.com/edmundtafadzwa-commits/freshroute/issues)
 3. Create a new issue with:
@@ -381,6 +431,7 @@ We welcome contributions from the community! Here's how you can help:
 ### Questions?
 
 If you have questions about contributing, please:
+
 - Check the [documentation](./API_DOCUMENTATION.md)
 - Open a [GitHub Issue](https://github.com/edmundtafadzwa-commits/freshroute/issues)
 - Join our community discussions

@@ -40,3 +40,44 @@ export const getSalesSummary = async (_req: Request, res: Response): Promise<voi
     res.status(500).json(formatError('Failed to retrieve sales summary', error));
   }
 };
+
+/**
+ * Get comprehensive analytics
+ */
+export const getAnalytics = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const analytics = await adminService.getAnalytics();
+    res.status(200).json(formatResponse(analytics, 'Analytics retrieved successfully'));
+  } catch (error) {
+    console.error('Error getting analytics:', error);
+    res.status(500).json(formatError('Failed to retrieve analytics', error));
+  }
+};
+
+/**
+ * Get sales by category
+ */
+export const getSalesByCategory = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const data = await adminService.getSalesByCategory();
+    res.status(200).json(formatResponse(data, 'Sales by category retrieved successfully'));
+  } catch (error) {
+    console.error('Error getting sales by category:', error);
+    res.status(500).json(formatError('Failed to retrieve sales by category', error));
+  }
+};
+
+/**
+ * Get revenue over time
+ */
+export const getRevenueOverTime = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const period = (req.query.period as 'day' | 'week' | 'month') || 'day';
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 30;
+    const data = await adminService.getRevenueOverTime(period, limit);
+    res.status(200).json(formatResponse(data, 'Revenue over time retrieved successfully'));
+  } catch (error) {
+    console.error('Error getting revenue over time:', error);
+    res.status(500).json(formatError('Failed to retrieve revenue over time', error));
+  }
+};

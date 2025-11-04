@@ -1,5 +1,7 @@
 import { productService } from './product.service';
 import { categoryService } from './category.service';
+import { orderService } from './order.service';
+import { analyticsService } from './analytics.service';
 import { Product } from '../models/product.model';
 
 export interface RecentProduct {
@@ -122,16 +124,42 @@ export class AdminService {
   }
 
   /**
-   * Get sales summary (placeholder for future implementation)
+   * Get sales summary
    */
   async getSalesSummary() {
-    // TODO: Implement when order management is added
+    const orderStats = await orderService.getOrderStats();
+    const analytics = await analyticsService.getSalesAnalytics();
+
     return {
-      totalSales: 0,
-      totalOrders: 0,
-      averageOrderValue: 0,
-      revenue: 0,
+      totalSales: orderStats.totalRevenue,
+      totalOrders: orderStats.total,
+      averageOrderValue: orderStats.averageOrderValue,
+      revenue: orderStats.totalRevenue,
+      pendingOrders: orderStats.pending,
+      completedOrders: orderStats.delivered,
+      topProducts: analytics.topProducts,
     };
+  }
+
+  /**
+   * Get comprehensive analytics
+   */
+  async getAnalytics() {
+    return analyticsService.getSalesAnalytics();
+  }
+
+  /**
+   * Get sales by category
+   */
+  async getSalesByCategory() {
+    return analyticsService.getSalesByCategory();
+  }
+
+  /**
+   * Get revenue over time
+   */
+  async getRevenueOverTime(period: 'day' | 'week' | 'month' = 'day', limit: number = 30) {
+    return analyticsService.getRevenueOverTime(period, limit);
   }
 }
 
