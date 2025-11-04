@@ -8,14 +8,22 @@ The platform aims to provide a seamless shopping experience across web and mobil
 
 ## Recent Changes
 
-### November 4, 2025 - Replit Environment Setup
-- Configured backend to run on port 3000 with 0.0.0.0 binding for Replit compatibility
+### November 4, 2025 - Replit Environment Setup & Deployment Configuration
+- Configured backend to use flexible port configuration: PORT (production) or BACKEND_PORT (dev) with default to 5000
+- Backend binds to 0.0.0.0 for Replit compatibility (not localhost)
 - Configured frontend to run on port 5000 with 0.0.0.0 host and allowedHosts for Replit proxy
 - Updated CORS configuration to automatically include Replit domain (REPLIT_DEV_DOMAIN) for seamless development and production deployment
 - Created missing `frontend/tsconfig.node.json` for proper Vite TypeScript configuration
-- Set up unified development workflow running both backend and frontend via concurrently
-- Configured autoscale deployment with proper build and run commands
+- Set up unified development workflow running both backend (port 3000) and frontend (port 5000) via concurrently
+- Configured autoscale deployment to only build and run backend service on port 5000
+- Frontend should be deployed separately as a Static Deployment
 - All services verified and running without errors
+
+**Deployment Configuration**:
+- **Development**: Backend on port 3000 (via BACKEND_PORT), Frontend on port 5000
+- **Production (Autoscale)**: Backend only on port 5000 (via PORT env variable)
+- **Frontend Production**: Deploy separately as Static Deployment
+- **Environment Variables**: PORT (production port), BACKEND_PORT (dev port), CORS_ORIGIN (optional override)
 
 ## User Preferences
 
