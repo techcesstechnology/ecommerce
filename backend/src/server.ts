@@ -10,6 +10,7 @@ import healthRoutes from './routes/health.routes';
 import productRoutes from './routes/product.routes';
 import categoryRoutes from './routes/category.routes';
 import adminRoutes from './routes/admin.routes';
+import orderRoutes from './routes/order.routes';
 
 // Load environment variables
 dotenv.config({ path: '../.env' });
@@ -59,6 +60,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -70,6 +72,7 @@ app.get('/', (_req: Request, res: Response) => {
       products: '/api/products',
       categories: '/api/categories',
       admin: '/api/admin',
+      orders: '/api/orders',
     },
   });
 });

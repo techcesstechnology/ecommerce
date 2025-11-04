@@ -172,3 +172,55 @@ export const getLowStockProducts = async (req: Request, res: Response): Promise<
     res.status(500).json(formatError('Failed to retrieve low stock products', error));
   }
 };
+
+/**
+ * Bulk create products
+ */
+export const bulkCreateProducts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await productService.bulkCreateProducts(req.body);
+    res.status(201).json(formatResponse(result, 'Bulk create completed'));
+  } catch (error) {
+    console.error('Error bulk creating products:', error);
+    res.status(500).json(formatError('Failed to bulk create products', error));
+  }
+};
+
+/**
+ * Bulk update products
+ */
+export const bulkUpdateProducts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await productService.bulkUpdateProducts(req.body);
+    res.status(200).json(formatResponse(result, 'Bulk update completed'));
+  } catch (error) {
+    console.error('Error bulk updating products:', error);
+    res.status(500).json(formatError('Failed to bulk update products', error));
+  }
+};
+
+/**
+ * Bulk delete products
+ */
+export const bulkDeleteProducts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await productService.bulkDeleteProducts(req.body.ids);
+    res.status(200).json(formatResponse(result, 'Bulk delete completed'));
+  } catch (error) {
+    console.error('Error bulk deleting products:', error);
+    res.status(500).json(formatError('Failed to bulk delete products', error));
+  }
+};
+
+/**
+ * Bulk update stock
+ */
+export const bulkUpdateStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await productService.bulkUpdateStock(req.body);
+    res.status(200).json(formatResponse(result, 'Bulk stock update completed'));
+  } catch (error) {
+    console.error('Error bulk updating stock:', error);
+    res.status(500).json(formatError('Failed to bulk update stock', error));
+  }
+};

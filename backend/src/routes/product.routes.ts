@@ -9,6 +9,10 @@ import {
   updateProductStock,
   getProductsByCategory,
   getLowStockProducts,
+  bulkCreateProducts,
+  bulkUpdateProducts,
+  bulkDeleteProducts,
+  bulkUpdateStock,
 } from '../controllers/product.controller';
 import { isAdmin, validateRequest } from '../middleware/admin.middleware';
 import { productValidators } from '../validators/product.validator';
@@ -33,5 +37,11 @@ router.patch(
   validateRequest,
   updateProductStock
 );
+
+// Bulk operations (admin only)
+router.post('/bulk/create', isAdmin, bulkCreateProducts);
+router.post('/bulk/update', isAdmin, bulkUpdateProducts);
+router.post('/bulk/delete', isAdmin, bulkDeleteProducts);
+router.post('/bulk/update-stock', isAdmin, bulkUpdateStock);
 
 export default router;

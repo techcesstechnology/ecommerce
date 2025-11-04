@@ -209,6 +209,119 @@ export class ProductService {
     const products = Array.from(productsStore.values());
     return products.filter((p) => p.stock <= threshold);
   }
+
+  /**
+   * Bulk create products
+   */
+  async bulkCreateProducts(productsData: CreateProductDto[]): Promise<{
+    created: Product[];
+    errors: Array<{ index: number; sku: string; error: string }>;
+  }> {
+    const created: Product[] = [];
+    const errors: Array<{ index: number; sku: string; error: string }> = [];
+
+    for (let i = 0; i < productsData.length; i++) {
+      try {
+        const product = await this.createProduct(productsData[i]);
+        created.push(product);
+      } catch (error) {
+        errors.push({
+          index: i,
+          sku: productsData[i].sku,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { created, errors };
+  }
+
+  /**
+   * Bulk update products
+   */
+  async bulkUpdateProducts(updates: Array<{ id: string; data: UpdateProductDto }>): Promise<{
+    updated: Product[];
+    errors: Array<{ id: string; error: string }>;
+  }> {
+    const updated: Product[] = [];
+    const errors: Array<{ id: string; error: string }> = [];
+
+    for (const update of updates) {
+      try {
+        const product = await this.updateProduct(update.id, update.data);
+        if (product) {
+          updated.push(product);
+        } else {
+          errors.push({ id: update.id, error: 'Product not found' });
+        }
+      } catch (error) {
+        errors.push({
+          id: update.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { updated, errors };
+  }
+
+  /**
+   * Bulk delete products
+   */
+  async bulkDeleteProducts(ids: string[]): Promise<{
+    deleted: string[];
+    errors: Array<{ id: string; error: string }>;
+  }> {
+    const deleted: string[] = [];
+    const errors: Array<{ id: string; error: string }> = [];
+
+    for (const id of ids) {
+      try {
+        const success = await this.deleteProduct(id);
+        if (success) {
+          deleted.push(id);
+        } else {
+          errors.push({ id, error: 'Product not found' });
+        }
+      } catch (error) {
+        errors.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { deleted, errors };
+  }
+
+  /**
+   * Bulk update stock
+   */
+  async bulkUpdateStock(updates: Array<{ id: string; quantity: number }>): Promise<{
+    updated: Product[];
+    errors: Array<{ id: string; error: string }>;
+  }> {
+    const updated: Product[] = [];
+    const errors: Array<{ id: string; error: string }> = [];
+
+    for (const update of updates) {
+      try {
+        const product = await this.updateStock(update.id, update.quantity);
+        if (product) {
+          updated.push(product);
+        } else {
+          errors.push({ id: update.id, error: 'Product not found' });
+        }
+      } catch (error) {
+        errors.push({
+          id: update.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { updated, errors };
+  }
 }
 
 export const productService = new ProductService();
