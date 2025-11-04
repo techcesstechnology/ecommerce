@@ -72,8 +72,17 @@ export class OrderService {
       });
     }
 
-    const discount = 0; // Apply discount if code provided
-    const tax = Math.round(subtotal * 0.15 * 100) / 100; // 15% tax
+    // Apply discount if code provided
+    let discount = 0;
+    if (data.discountCode) {
+      const { validateDiscountCode } = await import('../utils/price.utils');
+      const discountValidation = validateDiscountCode(data.discountCode, subtotal);
+      if (discountValidation.valid) {
+        discount = discountValidation.discount;
+      }
+    }
+
+    const tax = Math.round((subtotal - discount) * 0.15 * 100) / 100; // 15% tax
     const shipping = subtotal >= 100 ? 0 : 5; // Free shipping over $100
     const total = subtotal - discount + tax + shipping;
 
@@ -244,12 +253,18 @@ export class OrderService {
       throw new Error('Can only refund delivered orders');
     }
 
-    // Process refund
-    await paymentService.processRefund({
-      transactionId: order.id,
-      amount: request.amount || order.total,
-      reason: request.reason,
-    });
+    // Get payment transactions for this order
+    const transactions = await paymentService.getTransactionsByOrderId(order.id);
+    const completedTransaction = transactions.find((t) => t.status === 'completed');
+
+    if (completedTransaction) {
+      // Process refund using actual transaction ID
+      await paymentService.processRefund({
+        transactionId: completedTransaction.id,
+        amount: request.amount || order.total,
+        reason: request.reason,
+      });
+    }
 
     order.status = 'refunded';
     order.paymentStatus = 'refunded';

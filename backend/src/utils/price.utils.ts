@@ -85,16 +85,19 @@ export const formatCurrency = (amount: number, currency: string = 'USD'): string
 
 /**
  * Convert currency (simplified mock implementation)
+ * NOTE: In production, use a real-time currency exchange rate API
+ * or make these rates configurable through environment variables
  */
 export const convertCurrency = (
   amount: number,
   fromCurrency: string,
   toCurrency: string
 ): number => {
-  // Mock conversion rates
+  // Mock conversion rates - UPDATE THESE REGULARLY IN PRODUCTION
+  // Consider using APIs like: exchangerate-api.com, fixer.io, or openexchangerates.org
   const rates: Record<string, number> = {
     USD: 1,
-    ZWL: 322, // Zimbabwe Dollar
+    ZWL: 322, // Zimbabwe Dollar (as of implementation date)
     ZAR: 18.5, // South African Rand
     EUR: 0.92,
     GBP: 0.79,

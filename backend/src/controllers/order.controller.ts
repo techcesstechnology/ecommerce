@@ -29,7 +29,11 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
       if (paymentResult.success) {
         await orderService.updateOrderStatus(order.id, { status: 'confirmed' });
-        order.paymentStatus = 'completed';
+        // Update order's payment status through the service
+        const updatedOrder = await orderService.getOrderById(order.id);
+        if (updatedOrder) {
+          updatedOrder.paymentStatus = 'completed';
+        }
       } else {
         await orderService.updateOrderStatus(order.id, { status: 'cancelled' });
         res.status(400).json(formatError('Payment failed', paymentResult.message));
@@ -37,12 +41,15 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       }
     }
 
+    // Get the latest order state
+    const finalOrder = await orderService.getOrderById(order.id);
+
     // Send confirmation email
-    if (req.body.email) {
-      await sendOrderConfirmation(order, req.body.email);
+    if (req.body.email && finalOrder) {
+      await sendOrderConfirmation(finalOrder, req.body.email);
     }
 
-    res.status(201).json(formatResponse(order, 'Order created successfully'));
+    res.status(201).json(formatResponse(finalOrder || order, 'Order created successfully'));
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(400).json(formatError('Failed to create order', error));
