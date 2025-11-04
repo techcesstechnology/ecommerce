@@ -8,12 +8,17 @@ export class CategoryService {
   /**
    * Generate slug from name
    */
+  /**
+   * Generate slug from name - safe from ReDoS attacks
+   */
   private generateSlug(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    // Convert to lowercase and replace non-alphanumeric with single hyphen
+    let slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    
+    // Remove consecutive hyphens by splitting and filtering
+    slug = slug.split('-').filter(Boolean).join('-');
+    
+    return slug;
   }
 
   /**
