@@ -79,7 +79,7 @@ class ConfigService {
    * Reset singleton instance (for testing)
    */
   public static resetInstance(): void {
-    ConfigService.instance = null as any;
+    ConfigService.instance = undefined as any;
   }
 
   /**
@@ -93,12 +93,18 @@ class ConfigService {
       path.join(__dirname, '../../.env'),
     ];
 
+    let loaded = false;
     for (const envPath of envPaths) {
       const result = dotenv.config({ path: envPath });
       if (!result.error) {
         console.log(`✅ Loaded environment variables from: ${envPath}`);
+        loaded = true;
         break;
       }
+    }
+
+    if (!loaded) {
+      console.warn('⚠️  No .env file found. Using environment variables from system.');
     }
   }
 
@@ -198,12 +204,20 @@ class ConfigService {
    * Build CORS configuration
    */
   private buildCORSConfig(env: Environment): CORSConfig {
-    const defaultOrigins = env === Environment.PRODUCTION
-      ? []
-      : ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:19006'];
-
     const corsOrigin = getOptionalEnv(ENV_KEYS.CORS_ORIGIN, '');
-    const origins = corsOrigin ? parseArray(corsOrigin, []) : defaultOrigins;
+    let origins: string[];
+
+    if (corsOrigin) {
+      // Use provided origins from environment
+      origins = parseArray(corsOrigin, []);
+    } else if (env === Environment.PRODUCTION) {
+      // In production, require explicit CORS configuration
+      console.warn('⚠️  CORS_ORIGIN not set in production. CORS will be very restrictive.');
+      origins = [];
+    } else {
+      // Default origins for development
+      origins = ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:19006'];
+    }
 
     return {
       origins,
@@ -476,6 +490,7 @@ export function getConfig(): ConfigService {
 // This will be removed in a future version - use getConfig() instead
 export const config = {
   get instance() {
+    console.warn('⚠️  config.instance is deprecated. Please use getConfig() instead.');
     return ConfigService.getInstance();
   }
 };

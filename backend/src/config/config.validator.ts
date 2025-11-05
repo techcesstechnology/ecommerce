@@ -37,6 +37,17 @@ const REQUIRED_PROD_ENV_VARS = [
 ];
 
 /**
+ * Helper function to validate port numbers
+ */
+function validatePort(portValue: string | undefined, portName: string): void {
+  if (portValue && (isNaN(Number(portValue)) || Number(portValue) < 1 || Number(portValue) > 65535)) {
+    throw new ConfigValidationError(
+      `${portName} must be a valid port number (1-65535)`
+    );
+  }
+}
+
+/**
  * Validates that required environment variables are present
  */
 export function validateRequiredEnvVars(): void {
@@ -87,13 +98,7 @@ export function validateJWTSecrets(): void {
  * Validates database configuration
  */
 export function validateDatabaseConfig(): void {
-  const dbPort = process.env[ENV_KEYS.DB_PORT];
-  
-  if (dbPort && (isNaN(Number(dbPort)) || Number(dbPort) < 1 || Number(dbPort) > 65535)) {
-    throw new ConfigValidationError(
-      'DB_PORT must be a valid port number (1-65535)'
-    );
-  }
+  validatePort(process.env[ENV_KEYS.DB_PORT], 'DB_PORT');
 
   const env = process.env.NODE_ENV;
   if (env === Environment.PRODUCTION) {
@@ -110,27 +115,9 @@ export function validateDatabaseConfig(): void {
  * Validates port configuration
  */
 export function validatePortConfig(): void {
-  const port = process.env[ENV_KEYS.BACKEND_PORT];
-  
-  if (port && (isNaN(Number(port)) || Number(port) < 1 || Number(port) > 65535)) {
-    throw new ConfigValidationError(
-      'BACKEND_PORT must be a valid port number (1-65535)'
-    );
-  }
-
-  const redisPort = process.env[ENV_KEYS.REDIS_PORT];
-  if (redisPort && (isNaN(Number(redisPort)) || Number(redisPort) < 1 || Number(redisPort) > 65535)) {
-    throw new ConfigValidationError(
-      'REDIS_PORT must be a valid port number (1-65535)'
-    );
-  }
-
-  const emailPort = process.env[ENV_KEYS.EMAIL_PORT];
-  if (emailPort && (isNaN(Number(emailPort)) || Number(emailPort) < 1 || Number(emailPort) > 65535)) {
-    throw new ConfigValidationError(
-      'EMAIL_PORT must be a valid port number (1-65535)'
-    );
-  }
+  validatePort(process.env[ENV_KEYS.BACKEND_PORT], 'BACKEND_PORT');
+  validatePort(process.env[ENV_KEYS.REDIS_PORT], 'REDIS_PORT');
+  validatePort(process.env[ENV_KEYS.EMAIL_PORT], 'EMAIL_PORT');
 }
 
 /**
