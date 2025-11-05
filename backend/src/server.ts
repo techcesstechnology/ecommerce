@@ -5,8 +5,14 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 import healthRoutes from './routes/health.routes';
+import authRoutes from './routes/auth.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
+import { apiLimiter } from './middleware/rate-limit.middleware';
+import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
 
 // Load environment variables
 dotenv.config({ path: '../.env' });
@@ -14,8 +20,27 @@ dotenv.config({ path: '../.env' });
 const app: Application = express();
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT) || 5000;
 
-// Middleware
-app.use(helmet()); // Security headers
+// Trust proxy - important for rate limiting and getting correct IP addresses
+app.set('trust proxy', 1);
+
+// Security Middleware
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 
 // CORS configuration
 const defaultOrigins = ['http://localhost:5000', 'http://localhost:19006'];
@@ -43,13 +68,40 @@ app.use(
     credentials: true,
   })
 );
-app.use(compression()); // Compress responses
-app.use(morgan('combined')); // Logging
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Body parsing middleware
+app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Cookie parser
+// Note: CSRF protection is not required for API-only backends that use JWT tokens
+// in Authorization headers. CSRF attacks require cookies to be automatically sent,
+// which doesn't happen with Bearer token authentication. If you add session-based
+// authentication or forms, enable CSRF protection with a library like csurf.
+app.use(cookieParser());
+
+// Data sanitization against NoSQL injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(sanitizeInput);
+app.use(preventNoSQLInjection);
+
+// Prevent parameter pollution
+app.use(hpp());
+
+// Compression
+app.use(compression());
+
+// Logging
+app.use(morgan('combined'));
+
+// Apply rate limiting to all API routes
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -58,6 +110,7 @@ app.get('/', (_req: Request, res: Response) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
+      auth: '/api/auth',
     },
   });
 });
@@ -70,12 +123,16 @@ app.use((_req: Request, res: Response) => {
   });
 });
 
-// Error handler
+// Error handler - secure error handling without exposing sensitive information
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err.stack);
+
+  // Don't expose error details in production
+  const message = process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong';
+
   res.status(500).json({
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    message,
   });
 });
 
