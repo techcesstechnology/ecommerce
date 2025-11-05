@@ -45,7 +45,7 @@ export class SentryService {
 
   constructor() {
     this.enabled = sentryConfig.enabled && !!sentryConfig.dsn;
-    
+
     if (this.enabled) {
       this.initialize();
     }
@@ -64,10 +64,8 @@ export class SentryService {
         release: sentryConfig.release,
         tracesSampleRate: sentryConfig.tracesSampleRate,
         profilesSampleRate: sentryConfig.profilesSampleRate,
-        
-        integrations: [
-          nodeProfilingIntegration(),
-        ],
+
+        integrations: [nodeProfilingIntegration()],
 
         // Filter out known operational errors
         beforeSend(event) {
@@ -78,7 +76,7 @@ export class SentryService {
               return null;
             }
           }
-          
+
           return event;
         },
 
@@ -134,7 +132,7 @@ export class SentryService {
       }
 
       const eventId = Sentry.captureException(error);
-      
+
       logger.debug('Exception captured by Sentry', {
         event_id: eventId,
         error_name: error.name,
@@ -151,7 +149,11 @@ export class SentryService {
   /**
    * Capture message
    */
-  captureMessage(message: string, level: Sentry.SeverityLevel = 'info', context?: ErrorContext): string | undefined {
+  captureMessage(
+    message: string,
+    level: Sentry.SeverityLevel = 'info',
+    context?: ErrorContext
+  ): string | undefined {
     if (!this.isEnabled()) return undefined;
 
     try {
@@ -162,7 +164,7 @@ export class SentryService {
       }
 
       const eventId = Sentry.captureMessage(message, level);
-      
+
       logger.debug('Message captured by Sentry', {
         event_id: eventId,
         level,
@@ -286,10 +288,13 @@ export class SentryService {
     if (!this.isEnabled()) return undefined;
 
     try {
-      return Sentry.startSpan({
-        name,
-        op,
-      }, (span) => span);
+      return Sentry.startSpan(
+        {
+          name,
+          op,
+        },
+        (span) => span
+      );
     } catch (err) {
       logger.error('Failed to start transaction in Sentry', err as Error);
       return undefined;
@@ -302,13 +307,13 @@ export class SentryService {
   private sanitizeHeaders(headers: any): any {
     const sanitized = { ...headers };
     const sensitiveKeys = ['authorization', 'cookie', 'x-api-key', 'x-auth-token'];
-    
+
     for (const key of sensitiveKeys) {
       if (sanitized[key]) {
         sanitized[key] = '[REDACTED]';
       }
     }
-    
+
     return sanitized;
   }
 

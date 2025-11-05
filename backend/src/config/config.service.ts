@@ -346,7 +346,7 @@ class ConfigService {
    */
   private buildApmConfig(env: Environment): ApmConfig {
     const apiConfig = this.buildAPIConfig();
-    
+
     return {
       enabled: parseBoolean(process.env[ENV_KEYS.APM_ENABLED], false),
       serviceName: getOptionalEnv(ENV_KEYS.APM_SERVICE_NAME, 'freshroute-backend'),
@@ -366,7 +366,7 @@ class ConfigService {
    */
   private buildSentryConfig(env: Environment): SentryConfig {
     const apiConfig = this.buildAPIConfig();
-    
+
     return {
       enabled: parseBoolean(process.env[ENV_KEYS.SENTRY_ENABLED], false),
       dsn: getOptionalEnv(ENV_KEYS.SENTRY_DSN, ''),
@@ -375,12 +375,7 @@ class ConfigService {
       tracesSampleRate: parseFloat(process.env[ENV_KEYS.SENTRY_TRACES_SAMPLE_RATE], 0.1),
       profilesSampleRate: parseFloat(process.env[ENV_KEYS.SENTRY_PROFILES_SAMPLE_RATE], 0.1),
       allowUrls: [],
-      ignoreErrors: [
-        'ValidationError',
-        'UnauthorizedError',
-        'ForbiddenError',
-        'NotFoundError',
-      ],
+      ignoreErrors: ['ValidationError', 'UnauthorizedError', 'ForbiddenError', 'NotFoundError'],
     };
   }
 

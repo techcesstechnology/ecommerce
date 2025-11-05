@@ -8,18 +8,6 @@ import { apmService } from '../services/apm.service';
 import { sentryService } from '../services/sentry.service';
 import { LoggerService, getCorrelationId } from '../services/logger.service';
 
-// Extend Express Request to include monitoring data
-declare global {
-  namespace Express {
-    interface Request {
-      correlationId?: string;
-      transactionId?: string;
-      startTime?: number;
-      monitoringLogger?: LoggerService;
-    }
-  }
-}
-
 /**
  * Middleware to add correlation ID to requests
  */
@@ -60,7 +48,7 @@ export const apmMiddleware = (req: Request, res: Response, next: NextFunction): 
   if (transactionId) {
     apmService.addTransactionTag(transactionId, 'method', req.method);
     apmService.addTransactionTag(transactionId, 'path', req.path);
-    
+
     if (req.correlationId) {
       apmService.addTransactionTag(transactionId, 'correlation_id', req.correlationId);
     }
@@ -147,7 +135,7 @@ export const requestTimingMiddleware = (req: Request, res: Response, next: NextF
   // Log response
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    
+
     if (req.monitoringLogger) {
       req.monitoringLogger.logResponse(req, res.statusCode, duration);
     }

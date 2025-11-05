@@ -74,9 +74,7 @@ export function generateCorrelationId(): string {
 export function getCorrelationId(req: Request): string {
   // Check various possible correlation ID headers
   const correlationId =
-    req.headers['x-correlation-id'] ||
-    req.headers['x-request-id'] ||
-    req.headers['x-trace-id'];
+    req.headers['x-correlation-id'] || req.headers['x-request-id'] || req.headers['x-trace-id'];
 
   if (correlationId && typeof correlationId === 'string') {
     return correlationId;
@@ -257,7 +255,7 @@ export class LoggerService {
     }
 
     const meta = this.buildMetadata(options);
-    
+
     if (trace) {
       if (trace instanceof Error) {
         meta.trace = trace.stack;
@@ -335,7 +333,7 @@ export class LoggerService {
   logResponse(req: Request, statusCode: number, responseTime: number): void {
     const correlationId = getCorrelationId(req);
     const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
-    
+
     this.log(level, 'HTTP Response', {
       correlation_id: correlationId,
       method: req.method,

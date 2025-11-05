@@ -129,14 +129,16 @@ router.get('/detailed', async (_req: Request, res: Response) => {
         },
         cpu: {
           status: 'ok',
-          loadAverage: loadAvg.map(avg => Math.round(avg * 100) / 100),
+          loadAverage: loadAvg.map((avg) => Math.round(avg * 100) / 100),
           cores: cpuCores,
         },
       },
       monitoring: {
         apm: {
           enabled: apmService.isEnabled(),
-          activeTransactions: apmService.isEnabled() ? apmService.getActiveTransactions().length : undefined,
+          activeTransactions: apmService.isEnabled()
+            ? apmService.getActiveTransactions().length
+            : undefined,
         },
         sentry: {
           enabled: sentryService.isEnabled(),
@@ -164,7 +166,7 @@ router.get('/detailed', async (_req: Request, res: Response) => {
  */
 router.get('/ready', async (_req: Request, res: Response) => {
   const dbHealth = await checkDatabaseHealth();
-  
+
   if (dbHealth) {
     res.status(200).json({ ready: true });
   } else {

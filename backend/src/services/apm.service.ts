@@ -84,7 +84,7 @@ export class ApmService {
     };
 
     this.transactions.set(transactionId, transaction);
-    
+
     logger.debug(`Transaction started: ${name}`, {
       transaction_id: transactionId,
       type,
@@ -96,7 +96,11 @@ export class ApmService {
   /**
    * End a transaction
    */
-  endTransaction(transactionId: string, success: boolean = true, metadata?: Record<string, any>): void {
+  endTransaction(
+    transactionId: string,
+    success: boolean = true,
+    metadata?: Record<string, any>
+  ): void {
     if (!this.enabled || !transactionId) return;
 
     const transaction = this.transactions.get(transactionId);
@@ -107,7 +111,7 @@ export class ApmService {
 
     transaction.endTime = Date.now();
     transaction.duration = transaction.endTime - transaction.startTime;
-    
+
     if (metadata) {
       transaction.metadata = { ...transaction.metadata, ...metadata };
     }

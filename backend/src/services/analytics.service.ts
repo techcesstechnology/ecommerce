@@ -143,7 +143,11 @@ export class AnalyticsService {
   /**
    * Track page view
    */
-  async trackPageView(userId: string, pageName: string, properties?: Record<string, any>): Promise<void> {
+  async trackPageView(
+    userId: string,
+    pageName: string,
+    properties?: Record<string, any>
+  ): Promise<void> {
     if (!this.enabled || !analyticsConfig.trackPageViews) return;
 
     await this.trackEvent({
@@ -210,7 +214,10 @@ export class AnalyticsService {
   /**
    * Track product added to cart
    */
-  async trackProductAddedToCart(userId: string, properties: EcommerceEventProperties): Promise<void> {
+  async trackProductAddedToCart(
+    userId: string,
+    properties: EcommerceEventProperties
+  ): Promise<void> {
     if (!this.enabled) return;
 
     await this.trackEvent({
@@ -223,7 +230,10 @@ export class AnalyticsService {
   /**
    * Track product removed from cart
    */
-  async trackProductRemovedFromCart(userId: string, properties: EcommerceEventProperties): Promise<void> {
+  async trackProductRemovedFromCart(
+    userId: string,
+    properties: EcommerceEventProperties
+  ): Promise<void> {
     if (!this.enabled) return;
 
     await this.trackEvent({
@@ -291,7 +301,11 @@ export class AnalyticsService {
   /**
    * Track error
    */
-  async trackError(userId: string | undefined, error: Error, context?: Record<string, any>): Promise<void> {
+  async trackError(
+    userId: string | undefined,
+    error: Error,
+    context?: Record<string, any>
+  ): Promise<void> {
     if (!this.enabled || !analyticsConfig.trackErrors) return;
 
     await this.trackEvent({
@@ -314,10 +328,10 @@ export class AnalyticsService {
 
     try {
       logger.debug(`Flushing ${this.eventQueue.length} analytics events`);
-      
+
       // In a real implementation, batch send to analytics provider
       // For example: analytics.flush() for Segment
-      
+
       this.eventQueue = [];
     } catch (error) {
       logger.error('Failed to flush analytics events', error as Error);
