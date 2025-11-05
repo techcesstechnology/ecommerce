@@ -47,23 +47,32 @@ function sanitizeObject(obj: any): any {
 
 /**
  * Sanitize a string by removing dangerous patterns
+ * NOTE: This provides basic protection for API inputs. For HTML content rendering,
+ * use a comprehensive library like DOMPurify on the client side.
+ * API-only backends should rely on Content-Type: application/json and avoid HTML rendering.
  */
 function sanitizeString(str: string): string {
   if (typeof str !== 'string') return str;
 
-  // Remove script tags
-  str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  // Remove all script tags (including malformed ones with spaces)
+  // Multiple passes to handle nested or obfuscated scripts
+  let sanitized = str;
+  let previousLength = 0;
+  while (sanitized.length !== previousLength) {
+    previousLength = sanitized.length;
+    sanitized = sanitized.replace(/<\s*script[^>]*>.*?<\s*\/\s*script\s*>/gis, '');
+  }
 
-  // Remove event handlers
-  str = str.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+  // Remove all event handlers (comprehensive patterns)
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+  sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
 
-  // Remove javascript: protocol
-  str = str.replace(/javascript:/gi, '');
+  // Remove dangerous protocols (multiple passes for obfuscation)
+  sanitized = sanitized.replace(/javascript\s*:/gi, '');
+  sanitized = sanitized.replace(/vbscript\s*:/gi, '');
+  sanitized = sanitized.replace(/data\s*:\s*text\s*\/\s*html/gi, '');
 
-  // Remove data: protocol for images (potential XSS vector)
-  str = str.replace(/data:text\/html/gi, '');
-
-  return str.trim();
+  return sanitized.trim();
 }
 
 /**

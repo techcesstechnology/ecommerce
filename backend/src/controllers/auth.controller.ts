@@ -19,7 +19,8 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
     });
 
     // Don't send password in response
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pwd, ...userWithoutPassword } = user;
 
     res.status(201).json({
       message: 'User registered successfully. Please check your email to verify your account.',
@@ -64,12 +65,13 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     const { user, tokens } = await authService.login({ email, password, twoFactorCode }, ipAddress);
 
     // Don't send sensitive fields in response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {
-      password: _,
-      twoFactorSecret: __,
-      refreshTokenHash: ___,
-      emailVerificationToken: ____,
-      passwordResetToken: _____,
+      password: _pwd,
+      twoFactorSecret: _secret,
+      refreshTokenHash: _refresh,
+      emailVerificationToken: _emailToken,
+      passwordResetToken: _resetToken,
       ...userWithoutSensitive
     } = user;
 
@@ -199,7 +201,8 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
 
     const user = await authService.verifyEmail(token);
 
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pwd, ...userWithoutPassword } = user;
 
     res.status(200).json({
       message: 'Email verified successfully',
@@ -301,6 +304,8 @@ export const setupTwoFactor = async (req: AuthRequest, res: Response): Promise<v
     const { secret, qrCode } = await authService.setupTwoFactor(req.user.userId);
 
     // Generate QR code image
+    // Note: QR code contains the TOTP secret and is meant to be displayed to the user
+    // for scanning with their authenticator app. This is intentional and not a security issue.
     const qrCodeImage = await QRCode.toDataURL(qrCode);
 
     res.status(200).json({

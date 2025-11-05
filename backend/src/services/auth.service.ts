@@ -7,11 +7,28 @@ import { AppDataSource } from '../config/database.config';
 import { User } from '../models/user.entity';
 
 const SALT_ROUNDS = 12;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// JWT secrets - must be set in production
+const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-development-only-min-32-chars';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
 const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-change-in-production';
+  process.env.JWT_REFRESH_SECRET || 'test-refresh-secret-key-for-development-only-min-32-chars';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+// Validate JWT secrets in production
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error(
+      'JWT_SECRET environment variable is required in production and must be at least 32 characters long'
+    );
+  }
+  if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.length < 32) {
+    throw new Error(
+      'JWT_REFRESH_SECRET environment variable is required in production and must be at least 32 characters long'
+    );
+  }
+}
+
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 

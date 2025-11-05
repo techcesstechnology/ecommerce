@@ -72,6 +72,12 @@ app.use(
 // Body parsing middleware
 app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Cookie parser
+// Note: CSRF protection is not required for API-only backends that use JWT tokens
+// in Authorization headers. CSRF attacks require cookies to be automatically sent,
+// which doesn't happen with Bearer token authentication. If you add session-based
+// authentication or forms, enable CSRF protection with a library like csurf.
 app.use(cookieParser());
 
 // Data sanitization against NoSQL injection
