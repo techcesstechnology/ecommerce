@@ -69,6 +69,22 @@ npm run migration:generate -- src/migrations/YourMigrationName
 npm run migration:create -- src/migrations/YourMigrationName
 ```
 
+## Seeding the Database
+
+To populate the database with initial test data:
+
+```bash
+cd backend
+npm run seed
+```
+
+This will create:
+- 3 test users (admin, vendor, customer)
+- 5 product categories
+- 10 sample products across different categories
+
+**Note**: The seed script clears existing data before seeding. Use with caution in production!
+
 ## Database Entities
 
 The following entities are defined:
