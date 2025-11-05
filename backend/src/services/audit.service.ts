@@ -2,6 +2,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { AuditLog, CreateAuditLogDto } from '../models/audit.model';
 
 // In-memory storage for audit logs (replace with database in production)
+// TODO: Replace with PostgreSQL - suggested schema:
+// CREATE TABLE audit_logs (
+//   id UUID PRIMARY KEY,
+//   user_id UUID NOT NULL,
+//   user_email VARCHAR(255) NOT NULL,
+//   action VARCHAR(100) NOT NULL,
+//   resource VARCHAR(100) NOT NULL,
+//   resource_id UUID,
+//   details JSONB,
+//   ip_address INET,
+//   user_agent TEXT,
+//   timestamp TIMESTAMP NOT NULL DEFAULT NOW()
+// );
 const auditLogsStore: AuditLog[] = [];
 
 export class AuditService {
@@ -45,13 +58,11 @@ export class AuditService {
     }
 
     if (filters.startDate) {
-      const startDate = filters.startDate;
-      logs = logs.filter((l) => l.timestamp >= startDate);
+      logs = logs.filter((l) => l.timestamp >= filters.startDate!);
     }
 
     if (filters.endDate) {
-      const endDate = filters.endDate;
-      logs = logs.filter((l) => l.timestamp <= endDate);
+      logs = logs.filter((l) => l.timestamp <= filters.endDate!);
     }
 
     // Sort by timestamp descending (newest first)
