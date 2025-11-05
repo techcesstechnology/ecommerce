@@ -84,7 +84,7 @@ export const errorHandler = (
   if (code) errorResponse.code = code;
   if (errors) errorResponse.errors = errors;
 
-  // Include stack trace in development
+  // Include stack trace only in development mode
   if (isDevelopment && err.stack) {
     errorResponse.stack = err.stack;
   }

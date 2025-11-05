@@ -179,18 +179,24 @@ export class S3StorageService {
     try {
       let fileBuffer = buffer;
       let contentType = options.contentType || 'application/octet-stream';
+      let finalFilename = filename;
 
       // Optimize image if requested
       if (options.optimize && this.isImageFile(filename)) {
         fileBuffer = await this.optimizeImage(buffer, options.optimizationOptions);
 
-        // Update content type based on optimization format
+        // Update content type and filename extension based on optimization format
         if (options.optimizationOptions?.format) {
-          contentType = `image/${options.optimizationOptions.format}`;
+          const format = options.optimizationOptions.format;
+          contentType = `image/${format}`;
+
+          // Update filename extension to match new format
+          const baseName = filename.replace(/\.[^.]+$/, '');
+          finalFilename = `${baseName}.${format}`;
         }
       }
 
-      const key = this.generateFileKey(filename, options.folder);
+      const key = this.generateFileKey(finalFilename, options.folder);
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,

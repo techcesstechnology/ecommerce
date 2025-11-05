@@ -57,12 +57,22 @@ const createRotateFileTransport = (level: string, filename: string): DailyRotate
 const createLogger = (): winston.Logger => {
   const transports: winston.transport[] = [];
 
-  // Console transport (always enabled in development)
-  if (isDevelopment || !isProduction) {
+  // Console transport for development
+  if (isDevelopment) {
     transports.push(
       new winston.transports.Console({
         level: loggingConfig.level,
         format: developmentFormat,
+      })
+    );
+  }
+
+  // Console transport for production (errors only)
+  if (isProduction) {
+    transports.push(
+      new winston.transports.Console({
+        level: 'error',
+        format: productionFormat,
       })
     );
   }
@@ -77,16 +87,6 @@ const createLogger = (): winston.Logger => {
 
     // HTTP logs (for Morgan)
     transports.push(createRotateFileTransport('info', 'http'));
-  }
-
-  // Console transport for production (only errors)
-  if (isProduction) {
-    transports.push(
-      new winston.transports.Console({
-        level: 'error',
-        format: productionFormat,
-      })
-    );
   }
 
   return winston.createLogger({

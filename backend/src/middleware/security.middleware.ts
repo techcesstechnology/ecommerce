@@ -70,7 +70,7 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
  */
 export const requestId = (req: Request, res: Response, next: NextFunction): void => {
   const requestId =
-    req.get('X-Request-ID') || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    req.get('X-Request-ID') || `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   req.headers['x-request-id'] = requestId;
   res.setHeader('X-Request-ID', requestId);
   next();

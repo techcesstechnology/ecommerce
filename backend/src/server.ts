@@ -181,19 +181,21 @@ process.on('SIGINT', async () => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
   logger.error('Uncaught Exception', error.stack);
-  // Give logger time to write, then exit
-  setTimeout(() => {
-    process.exit(1);
-  }, 1000);
+  // Flush logs and exit
+  logger.on('finish', () => process.exit(1));
+  logger.end();
+  // Fallback timeout in case logger doesn't finish
+  setTimeout(() => process.exit(1), 5000);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason: any) => {
   logger.error('Unhandled Rejection', reason?.stack || String(reason));
-  // Give logger time to write, then exit
-  setTimeout(() => {
-    process.exit(1);
-  }, 1000);
+  // Flush logs and exit
+  logger.on('finish', () => process.exit(1));
+  logger.end();
+  // Fallback timeout in case logger doesn't finish
+  setTimeout(() => process.exit(1), 5000);
 });
 
 // Start the server
