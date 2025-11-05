@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -12,7 +12,11 @@ import authRoutes from './routes/auth.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.middleware';
+import { productionMiddleware, requestLogger } from './middleware/security.middleware';
 import { getConfig } from './config';
+import { logger, morganStream } from './services/logger.service';
+import { initializeRedis, closeRedis } from './services/redis.service';
 
 // Get configuration
 const config = getConfig();
@@ -24,6 +28,14 @@ const PORT = apiConfig.port;
 
 // Trust proxy - important for rate limiting and getting correct IP addresses
 app.set('trust proxy', apiConfig.trustProxy);
+
+// Production-specific middleware (HTTPS enforcement, security headers, etc.)
+if (config.isProduction()) {
+  app.use(productionMiddleware);
+}
+
+// Request logger (for structured logging)
+app.use(requestLogger);
 
 // Security Middleware
 app.use(
@@ -94,8 +106,9 @@ app.use(hpp());
 // Compression
 app.use(compression());
 
-// Logging
-app.use(morgan('combined'));
+// HTTP request logging with Winston
+const morganFormat = config.isProduction() ? 'combined' : 'dev';
+app.use(morgan(morganFormat, { stream: morganStream }));
 
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
@@ -118,25 +131,10 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 // 404 handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested resource was not found',
-  });
-});
+app.use(notFoundHandler);
 
-// Error handler - secure error handling without exposing sensitive information
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err.stack);
-
-  // Don't expose error details in production
-  const message = config.isDevelopment() ? err.message : 'Something went wrong';
-
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message,
-  });
-});
+// Global error handler - must be last
+app.use(errorHandler);
 
 // Initialize database and start server
 async function startServer() {
@@ -146,33 +144,58 @@ async function startServer() {
 
     // Initialize database connection
     await initializeDatabase();
-    console.log('✅ Database initialized successfully');
+    logger.info('✅ Database initialized successfully');
+
+    // Initialize Redis connection (non-blocking)
+    await initializeRedis();
 
     // Start server only if not in test mode
     if (!config.isTest()) {
       app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📝 Environment: ${config.getEnvironment()}`);
-        console.log(`🌐 API URL: http://${apiConfig.host}:${PORT}${apiConfig.prefix}`);
+        logger.info(`🚀 Server running on port ${PORT}`);
+        logger.info(`📝 Environment: ${config.getEnvironment()}`);
+        logger.info(`🌐 API URL: http://${apiConfig.host}:${PORT}${apiConfig.prefix}`);
       });
     }
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
+  } catch (error: any) {
+    logger.error('❌ Failed to start server', error.stack);
     process.exit(1);
   }
 }
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+  logger.info('SIGTERM signal received: closing HTTP server');
   await closeDatabase();
+  await closeRedis();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('SIGINT signal received: closing HTTP server');
+  logger.info('SIGINT signal received: closing HTTP server');
   await closeDatabase();
+  await closeRedis();
   process.exit(0);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception', error.stack);
+  // Flush logs and exit
+  logger.on('finish', () => process.exit(1));
+  logger.end();
+  // Fallback timeout in case logger doesn't finish
+  setTimeout(() => process.exit(1), 5000);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled Rejection', reason?.stack || String(reason));
+  // Flush logs and exit
+  logger.on('finish', () => process.exit(1));
+  logger.end();
+  // Fallback timeout in case logger doesn't finish
+  setTimeout(() => process.exit(1), 5000);
 });
 
 // Start the server

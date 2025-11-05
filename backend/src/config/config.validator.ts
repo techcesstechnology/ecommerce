@@ -30,20 +30,17 @@ const REQUIRED_ENV_VARS = [
 /**
  * Required environment variables for production
  */
-const REQUIRED_PROD_ENV_VARS = [
-  ...REQUIRED_ENV_VARS,
-  ENV_KEYS.DB_PASSWORD,
-  ENV_KEYS.DB_SSL,
-];
+const REQUIRED_PROD_ENV_VARS = [...REQUIRED_ENV_VARS, ENV_KEYS.DB_PASSWORD, ENV_KEYS.DB_SSL];
 
 /**
  * Helper function to validate port numbers
  */
 function validatePort(portValue: string | undefined, portName: string): void {
-  if (portValue && (isNaN(Number(portValue)) || Number(portValue) < 1 || Number(portValue) > 65535)) {
-    throw new ConfigValidationError(
-      `${portName} must be a valid port number (1-65535)`
-    );
+  if (
+    portValue &&
+    (isNaN(Number(portValue)) || Number(portValue) < 1 || Number(portValue) > 65535)
+  ) {
+    throw new ConfigValidationError(`${portName} must be a valid port number (1-65535)`);
   }
 }
 
@@ -76,9 +73,7 @@ export function validateJWTSecrets(): void {
   const jwtRefreshSecret = process.env[ENV_KEYS.JWT_REFRESH_SECRET];
 
   if (jwtSecret && jwtSecret.length < 32) {
-    throw new ConfigValidationError(
-      'JWT_SECRET must be at least 32 characters long for security'
-    );
+    throw new ConfigValidationError('JWT_SECRET must be at least 32 characters long for security');
   }
 
   if (jwtRefreshSecret && jwtRefreshSecret.length < 32) {
@@ -88,9 +83,7 @@ export function validateJWTSecrets(): void {
   }
 
   if (jwtSecret === jwtRefreshSecret) {
-    throw new ConfigValidationError(
-      'JWT_SECRET and JWT_REFRESH_SECRET must be different'
-    );
+    throw new ConfigValidationError('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   }
 }
 
@@ -133,16 +126,12 @@ export function validateBusinessConfig(): void {
 
   const shippingFeeBase = process.env[ENV_KEYS.SHIPPING_FEE_BASE];
   if (shippingFeeBase && (isNaN(Number(shippingFeeBase)) || Number(shippingFeeBase) < 0)) {
-    throw new ConfigValidationError(
-      'SHIPPING_FEE_BASE must be a positive number'
-    );
+    throw new ConfigValidationError('SHIPPING_FEE_BASE must be a positive number');
   }
 
   const shippingFeePerKm = process.env[ENV_KEYS.SHIPPING_FEE_PER_KM];
   if (shippingFeePerKm && (isNaN(Number(shippingFeePerKm)) || Number(shippingFeePerKm) < 0)) {
-    throw new ConfigValidationError(
-      'SHIPPING_FEE_PER_KM must be a positive number'
-    );
+    throw new ConfigValidationError('SHIPPING_FEE_PER_KM must be a positive number');
   }
 }
 
@@ -152,16 +141,12 @@ export function validateBusinessConfig(): void {
 export function validateRateLimitConfig(): void {
   const windowMs = process.env[ENV_KEYS.RATE_LIMIT_WINDOW_MS];
   if (windowMs && (isNaN(Number(windowMs)) || Number(windowMs) < 1000)) {
-    throw new ConfigValidationError(
-      'RATE_LIMIT_WINDOW_MS must be at least 1000 (1 second)'
-    );
+    throw new ConfigValidationError('RATE_LIMIT_WINDOW_MS must be at least 1000 (1 second)');
   }
 
   const maxRequests = process.env[ENV_KEYS.RATE_LIMIT_MAX_REQUESTS];
   if (maxRequests && (isNaN(Number(maxRequests)) || Number(maxRequests) < 1)) {
-    throw new ConfigValidationError(
-      'RATE_LIMIT_MAX_REQUESTS must be a positive number'
-    );
+    throw new ConfigValidationError('RATE_LIMIT_MAX_REQUESTS must be a positive number');
   }
 }
 
@@ -170,7 +155,7 @@ export function validateRateLimitConfig(): void {
  */
 export function validateEnvironment(): Environment {
   const env = process.env.NODE_ENV || Environment.DEVELOPMENT;
-  
+
   if (!Object.values(Environment).includes(env as Environment)) {
     throw new ConfigValidationError(
       `Invalid NODE_ENV: ${env}. Must be one of: ${Object.values(Environment).join(', ')}`
@@ -184,13 +169,11 @@ export function validateEnvironment(): Environment {
  * Validates CORS origins
  */
 export function validateCORSOrigins(origins: string): void {
-  const originList = origins.split(',').map(o => o.trim());
-  
+  const originList = origins.split(',').map((o) => o.trim());
+
   for (const origin of originList) {
     if (origin !== '*' && !isValidURL(origin)) {
-      throw new ConfigValidationError(
-        `Invalid CORS origin: ${origin}. Must be a valid URL or '*'`
-      );
+      throw new ConfigValidationError(`Invalid CORS origin: ${origin}. Must be a valid URL or '*'`);
     }
   }
 }
@@ -259,7 +242,10 @@ export function parseFloat(value: string | undefined, defaultValue: number): num
  */
 export function parseArray(value: string | undefined, defaultValue: string[]): string[] {
   if (!value) return defaultValue;
-  return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
 }
 
 /**

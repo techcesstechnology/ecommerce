@@ -10,7 +10,7 @@ describe('ConfigService', () => {
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env };
-    
+
     // Set minimum required env vars for tests
     process.env.DB_HOST = 'localhost';
     process.env.DB_PORT = '5432';
@@ -20,7 +20,7 @@ describe('ConfigService', () => {
     process.env.JWT_SECRET = 'test_jwt_secret_at_least_32_characters_long_12345';
     process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_at_least_32_characters_long_12345';
     process.env.BACKEND_PORT = '5000';
-    
+
     // Reset singleton before each test
     ConfigService.resetInstance();
   });
@@ -28,7 +28,7 @@ describe('ConfigService', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
-    
+
     // Reset singleton after each test
     ConfigService.resetInstance();
   });
@@ -224,7 +224,7 @@ describe('ConfigService', () => {
       const config = ConfigService.getInstance();
       const businessConfig = config.getBusinessConfig();
 
-      expect(businessConfig.taxRate).toBe(0.20);
+      expect(businessConfig.taxRate).toBe(0.2);
     });
 
     it('should have default currency settings', () => {
@@ -239,17 +239,17 @@ describe('ConfigService', () => {
       const config = ConfigService.getInstance();
       const businessConfig = config.getBusinessConfig();
 
-      expect(businessConfig.shippingFeeBase).toBe(5.00);
-      expect(businessConfig.shippingFeePerKm).toBe(0.50);
-      expect(businessConfig.freeShippingThreshold).toBe(50.00);
+      expect(businessConfig.shippingFeeBase).toBe(5.0);
+      expect(businessConfig.shippingFeePerKm).toBe(0.5);
+      expect(businessConfig.freeShippingThreshold).toBe(50.0);
     });
 
     it('should have order limits', () => {
       const config = ConfigService.getInstance();
       const businessConfig = config.getBusinessConfig();
 
-      expect(businessConfig.minOrderAmount).toBe(10.00);
-      expect(businessConfig.maxOrderAmount).toBe(10000.00);
+      expect(businessConfig.minOrderAmount).toBe(10.0);
+      expect(businessConfig.maxOrderAmount).toBe(10000.0);
     });
   });
 
@@ -346,9 +346,9 @@ describe('ConfigService', () => {
     it('should print configuration summary without errors', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       const config = ConfigService.getInstance();
-      
+
       config.printConfigSummary();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
