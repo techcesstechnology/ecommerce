@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -5,6 +6,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import healthRoutes from './routes/health.routes';
+import { initializeDatabase, closeDatabase } from './config/database.config';
 
 // Load environment variables
 dotenv.config({ path: '../.env' });
@@ -77,12 +79,42 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// Start server
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+    console.log('✅ Database initialized successfully');
+
+    // Start server only if not in test mode
+    if (process.env.NODE_ENV !== 'test') {
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      });
+    }
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  await closeDatabase();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  await closeDatabase();
+  process.exit(0);
+});
+
+// Start the server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+  startServer();
 }
 
 export default app;
