@@ -20,6 +20,10 @@ import {
   StorageConfig,
   LoggingConfig,
   PaymentConfig,
+  MonitoringConfig,
+  ApmConfig,
+  SentryConfig,
+  AnalyticsConfig,
   ENV_KEYS,
 } from './env.types';
 import {
@@ -133,6 +137,7 @@ class ConfigService {
       storage: this.buildStorageConfig(),
       logging: this.buildLoggingConfig(env),
       payment: this.buildPaymentConfig(),
+      monitoring: this.buildMonitoringConfig(env),
     };
   }
 
@@ -337,6 +342,78 @@ class ConfigService {
   }
 
   /**
+   * Build APM configuration
+   */
+  private buildApmConfig(env: Environment): ApmConfig {
+    const apiConfig = this.buildAPIConfig();
+    
+    return {
+      enabled: parseBoolean(process.env[ENV_KEYS.APM_ENABLED], false),
+      serviceName: getOptionalEnv(ENV_KEYS.APM_SERVICE_NAME, 'freshroute-backend'),
+      environment: env,
+      version: apiConfig.version,
+      apiKey: getOptionalEnv(ENV_KEYS.APM_API_KEY, ''),
+      samplingRate: parseFloat(process.env[ENV_KEYS.APM_SAMPLING_RATE], 0.1),
+      tags: {
+        service: 'backend',
+        platform: 'node',
+      },
+    };
+  }
+
+  /**
+   * Build Sentry configuration
+   */
+  private buildSentryConfig(env: Environment): SentryConfig {
+    const apiConfig = this.buildAPIConfig();
+    
+    return {
+      enabled: parseBoolean(process.env[ENV_KEYS.SENTRY_ENABLED], false),
+      dsn: getOptionalEnv(ENV_KEYS.SENTRY_DSN, ''),
+      environment: env,
+      release: `freshroute-backend@${apiConfig.version}`,
+      tracesSampleRate: parseFloat(process.env[ENV_KEYS.SENTRY_TRACES_SAMPLE_RATE], 0.1),
+      profilesSampleRate: parseFloat(process.env[ENV_KEYS.SENTRY_PROFILES_SAMPLE_RATE], 0.1),
+      allowUrls: [],
+      ignoreErrors: [
+        'ValidationError',
+        'UnauthorizedError',
+        'ForbiddenError',
+        'NotFoundError',
+      ],
+    };
+  }
+
+  /**
+   * Build Analytics configuration
+   */
+  private buildAnalyticsConfig(): AnalyticsConfig {
+    const provider = getOptionalEnv(
+      ENV_KEYS.ANALYTICS_PROVIDER,
+      'mock'
+    ) as AnalyticsConfig['provider'];
+
+    return {
+      enabled: parseBoolean(process.env[ENV_KEYS.ANALYTICS_ENABLED], false),
+      provider,
+      apiKey: getOptionalEnv(ENV_KEYS.ANALYTICS_API_KEY, ''),
+      trackPageViews: true,
+      trackErrors: true,
+    };
+  }
+
+  /**
+   * Build monitoring configuration
+   */
+  private buildMonitoringConfig(env: Environment): MonitoringConfig {
+    return {
+      apm: this.buildApmConfig(env),
+      sentry: this.buildSentryConfig(env),
+      analytics: this.buildAnalyticsConfig(),
+    };
+  }
+
+  /**
    * Get the complete configuration
    */
   public getConfig(): Readonly<AppConfig> {
@@ -425,6 +502,38 @@ class ConfigService {
    */
   public getPaymentConfig(): Readonly<PaymentConfig> {
     return Object.freeze({ ...this.config.payment });
+  }
+
+  /**
+   * Get monitoring configuration
+   */
+  public getMonitoringConfig(): Readonly<MonitoringConfig> {
+    return Object.freeze({
+      apm: { ...this.config.monitoring.apm },
+      sentry: { ...this.config.monitoring.sentry },
+      analytics: { ...this.config.monitoring.analytics },
+    });
+  }
+
+  /**
+   * Get APM configuration
+   */
+  public getApmConfig(): Readonly<ApmConfig> {
+    return Object.freeze({ ...this.config.monitoring.apm });
+  }
+
+  /**
+   * Get Sentry configuration
+   */
+  public getSentryConfig(): Readonly<SentryConfig> {
+    return Object.freeze({ ...this.config.monitoring.sentry });
+  }
+
+  /**
+   * Get Analytics configuration
+   */
+  public getAnalyticsConfig(): Readonly<AnalyticsConfig> {
+    return Object.freeze({ ...this.config.monitoring.analytics });
   }
 
   /**

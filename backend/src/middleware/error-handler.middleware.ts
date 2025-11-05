@@ -1,11 +1,12 @@
 /**
  * Error Handler Middleware
- * Global error handling with structured logging
+ * Global error handling with structured logging and monitoring integration
  */
 
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors';
 import { logger } from '../services/logger.service';
+import { trackError } from './monitoring.middleware';
 
 /**
  * Error response interface
@@ -17,6 +18,7 @@ interface ErrorResponse {
   code?: string;
   errors?: any[];
   stack?: string;
+  correlationId?: string;
 }
 
 /**
@@ -54,6 +56,9 @@ export const errorHandler = (
     }
   }
 
+  // Track error in monitoring services
+  trackError(err, req);
+
   // Log error with appropriate level
   const logContext = {
     method: req.method,
@@ -63,6 +68,7 @@ export const errorHandler = (
     statusCode,
     code,
     isOperational,
+    correlation_id: req.correlationId,
   };
 
   if (statusCode >= 500) {
@@ -79,6 +85,11 @@ export const errorHandler = (
     message: isProduction && !isOperational ? 'Something went wrong' : message,
     statusCode,
   };
+
+  // Add correlation ID for tracking
+  if (req.correlationId) {
+    errorResponse.correlationId = req.correlationId;
+  }
 
   // Add optional fields
   if (code) errorResponse.code = code;

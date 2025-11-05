@@ -1,18 +1,90 @@
 /**
  * Logger Service
  * Centralized logging service using Winston with file and console transports
+ * Enhanced with correlation IDs, structured metadata, and rate limiting
  */
 
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import { getConfig } from '../config';
+import { Request } from 'express';
+import crypto from 'crypto';
 
 // Get configuration
 const config = getConfig();
 const loggingConfig = config.getLoggingConfig();
 const isProduction = config.isProduction();
 const isDevelopment = config.isDevelopment();
+
+/**
+ * Logger options interface
+ */
+export interface LoggerOptions {
+  level?: string;
+  correlation_id?: string;
+  metadata?: Record<string, any>;
+  user_id?: string;
+  request_id?: string;
+  ip?: string;
+  method?: string;
+  url?: string;
+  user_agent?: string;
+  status_code?: number;
+  response_time?: number;
+}
+
+/**
+ * Rate limiting cache for logging
+ */
+const logRateLimitCache = new Map<string, { count: number; resetTime: number }>();
+const LOG_RATE_LIMIT_WINDOW = 60000; // 1 minute
+const LOG_RATE_LIMIT_MAX = 100; // Max 100 logs per minute per key
+
+/**
+ * Check if log should be rate limited
+ */
+function shouldRateLimit(key: string): boolean {
+  const now = Date.now();
+  const entry = logRateLimitCache.get(key);
+
+  if (!entry || entry.resetTime < now) {
+    logRateLimitCache.set(key, { count: 1, resetTime: now + LOG_RATE_LIMIT_WINDOW });
+    return false;
+  }
+
+  if (entry.count >= LOG_RATE_LIMIT_MAX) {
+    return true;
+  }
+
+  entry.count++;
+  return false;
+}
+
+/**
+ * Generate correlation ID
+ */
+export function generateCorrelationId(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Extract correlation ID from request
+ */
+export function getCorrelationId(req: Request): string {
+  // Check various possible correlation ID headers
+  const correlationId =
+    req.headers['x-correlation-id'] ||
+    req.headers['x-request-id'] ||
+    req.headers['x-trace-id'];
+
+  if (correlationId && typeof correlationId === 'string') {
+    return correlationId;
+  }
+
+  // Generate new correlation ID
+  return generateCorrelationId();
+}
 
 /**
  * Custom log format for production
@@ -116,62 +188,162 @@ export const morganStream = {
  */
 export class LoggerService {
   private logger: winston.Logger;
+  private context?: string;
+  private correlationId?: string;
 
-  constructor(context?: string) {
+  constructor(context?: string, correlationId?: string) {
+    this.context = context;
+    this.correlationId = correlationId;
     this.logger = context ? logger.child({ context }) : logger;
+  }
+
+  /**
+   * Set correlation ID for this logger instance
+   */
+  setCorrelationId(correlationId: string): void {
+    this.correlationId = correlationId;
+  }
+
+  /**
+   * Get correlation ID
+   */
+  getCorrelationId(): string | undefined {
+    return this.correlationId;
+  }
+
+  /**
+   * Build metadata object with correlation ID
+   */
+  private buildMetadata(options?: LoggerOptions): any {
+    const meta: any = {
+      ...options?.metadata,
+    };
+
+    // Add correlation ID
+    if (this.correlationId || options?.correlation_id) {
+      meta.correlation_id = this.correlationId || options?.correlation_id;
+    }
+
+    // Add request ID
+    if (options?.request_id) {
+      meta.request_id = options.request_id;
+    }
+
+    // Add user ID
+    if (options?.user_id) {
+      meta.user_id = options.user_id;
+    }
+
+    // Add request context
+    if (options?.ip) meta.ip = options.ip;
+    if (options?.method) meta.method = options.method;
+    if (options?.url) meta.url = options.url;
+
+    // Add context if available
+    if (this.context && !meta.context) {
+      meta.context = this.context;
+    }
+
+    return meta;
   }
 
   /**
    * Log error message
    */
-  error(message: string, trace?: string, context?: string): void {
-    const meta: any = {};
-    if (trace) meta.trace = trace;
-    if (context) meta.context = context;
+  error(message: string, trace?: string | Error, options?: LoggerOptions): void {
+    const rateLimitKey = `error:${message.substring(0, 50)}`;
+    if (shouldRateLimit(rateLimitKey)) {
+      return;
+    }
+
+    const meta = this.buildMetadata(options);
+    
+    if (trace) {
+      if (trace instanceof Error) {
+        meta.trace = trace.stack;
+        meta.error_name = trace.name;
+      } else {
+        meta.trace = trace;
+      }
+    }
+
     this.logger.error(message, meta);
   }
 
   /**
    * Log warning message
    */
-  warn(message: string, context?: string): void {
-    const meta: any = {};
-    if (context) meta.context = context;
+  warn(message: string, options?: LoggerOptions): void {
+    const meta = this.buildMetadata(options);
     this.logger.warn(message, meta);
   }
 
   /**
    * Log info message
    */
-  info(message: string, context?: string): void {
-    const meta: any = {};
-    if (context) meta.context = context;
+  info(message: string, options?: LoggerOptions): void {
+    const meta = this.buildMetadata(options);
     this.logger.info(message, meta);
   }
 
   /**
    * Log debug message
    */
-  debug(message: string, context?: string): void {
-    const meta: any = {};
-    if (context) meta.context = context;
+  debug(message: string, options?: LoggerOptions): void {
+    const meta = this.buildMetadata(options);
     this.logger.debug(message, meta);
   }
 
   /**
    * Log verbose message
    */
-  verbose(message: string, context?: string): void {
-    const meta: any = {};
-    if (context) meta.context = context;
+  verbose(message: string, options?: LoggerOptions): void {
+    const meta = this.buildMetadata(options);
     this.logger.verbose(message, meta);
   }
 
   /**
    * Log with custom level
    */
-  log(level: string, message: string, meta?: any): void {
+  log(level: string, message: string, options?: LoggerOptions): void {
+    const meta = this.buildMetadata(options);
     this.logger.log(level, message, meta);
+  }
+
+  /**
+   * Log HTTP request
+   */
+  logRequest(req: Request, responseTime?: number): void {
+    const correlationId = getCorrelationId(req);
+    this.info('HTTP Request', {
+      correlation_id: correlationId,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      user_agent: req.get('user-agent'),
+      response_time: responseTime,
+      metadata: {
+        query: Object.keys(req.query).length > 0 ? req.query : undefined,
+        params: Object.keys(req.params).length > 0 ? req.params : undefined,
+      },
+    });
+  }
+
+  /**
+   * Log HTTP response
+   */
+  logResponse(req: Request, statusCode: number, responseTime: number): void {
+    const correlationId = getCorrelationId(req);
+    const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+    
+    this.log(level, 'HTTP Response', {
+      correlation_id: correlationId,
+      method: req.method,
+      url: req.originalUrl,
+      status_code: statusCode,
+      response_time: responseTime,
+      ip: req.ip,
+    });
   }
 }
 

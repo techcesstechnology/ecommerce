@@ -166,6 +166,54 @@ export interface PaymentConfig {
 }
 
 /**
+ * APM (Application Performance Monitoring) configuration interface
+ */
+export interface ApmConfig {
+  enabled: boolean;
+  serviceName: string;
+  environment: string;
+  version: string;
+  apiKey: string;
+  samplingRate: number;
+  tags: Record<string, string>;
+}
+
+/**
+ * Sentry error tracking configuration interface
+ */
+export interface SentryConfig {
+  enabled: boolean;
+  dsn: string;
+  environment: string;
+  release: string;
+  tracesSampleRate: number;
+  profilesSampleRate: number;
+  allowUrls: string[];
+  ignoreErrors: string[];
+  beforeSend?: boolean;
+}
+
+/**
+ * Analytics configuration interface
+ */
+export interface AnalyticsConfig {
+  enabled: boolean;
+  provider: 'segment' | 'mixpanel' | 'amplitude' | 'mock';
+  apiKey: string;
+  trackPageViews: boolean;
+  trackErrors: boolean;
+}
+
+/**
+ * Monitoring configuration interface (combines all monitoring services)
+ */
+export interface MonitoringConfig {
+  apm: ApmConfig;
+  sentry: SentryConfig;
+  analytics: AnalyticsConfig;
+}
+
+/**
  * Complete application configuration interface
  */
 export interface AppConfig {
@@ -186,6 +234,7 @@ export interface AppConfig {
   storage: StorageConfig;
   logging: LoggingConfig;
   payment: PaymentConfig;
+  monitoring: MonitoringConfig;
 }
 
 /**
@@ -274,4 +323,21 @@ export const ENV_KEYS = {
   PAYMENT_API_KEY: 'PAYMENT_API_KEY',
   PAYMENT_API_SECRET: 'PAYMENT_API_SECRET',
   PAYMENT_WEBHOOK_SECRET: 'PAYMENT_WEBHOOK_SECRET',
+
+  // APM Monitoring
+  APM_ENABLED: 'APM_ENABLED',
+  APM_SERVICE_NAME: 'APM_SERVICE_NAME',
+  APM_API_KEY: 'APM_API_KEY',
+  APM_SAMPLING_RATE: 'APM_SAMPLING_RATE',
+
+  // Sentry Error Tracking
+  SENTRY_ENABLED: 'SENTRY_ENABLED',
+  SENTRY_DSN: 'SENTRY_DSN',
+  SENTRY_TRACES_SAMPLE_RATE: 'SENTRY_TRACES_SAMPLE_RATE',
+  SENTRY_PROFILES_SAMPLE_RATE: 'SENTRY_PROFILES_SAMPLE_RATE',
+
+  // Analytics
+  ANALYTICS_ENABLED: 'ANALYTICS_ENABLED',
+  ANALYTICS_PROVIDER: 'ANALYTICS_PROVIDER',
+  ANALYTICS_API_KEY: 'ANALYTICS_API_KEY',
 } as const;

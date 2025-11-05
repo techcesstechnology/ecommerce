@@ -349,3 +349,14 @@ export const initializeRedis = async (): Promise<void> => {
 export const closeRedis = async (): Promise<void> => {
   await redisService.disconnect();
 };
+
+/**
+ * Check Redis health
+ */
+export const checkRedisHealth = async (): Promise<boolean> => {
+  try {
+    return await redisService.ping();
+  } catch (error) {
+    return false;
+  }
+};
