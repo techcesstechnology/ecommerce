@@ -26,11 +26,7 @@ describe('Sanitization Middleware', () => {
         name: 'Test<script>alert("XSS")</script>User',
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.name).toBe('TestUser');
       expect(nextFunction).toHaveBeenCalled();
@@ -41,11 +37,7 @@ describe('Sanitization Middleware', () => {
         description: 'Click <a href="#" onclick="alert()">here</a>',
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.description).not.toContain('onclick=');
       expect(nextFunction).toHaveBeenCalled();
@@ -56,11 +48,7 @@ describe('Sanitization Middleware', () => {
         url: 'javascript:alert("XSS")',
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.url).not.toContain('javascript:');
       expect(nextFunction).toHaveBeenCalled();
@@ -76,11 +64,7 @@ describe('Sanitization Middleware', () => {
         },
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.user.name).toBe('Test');
       expect(mockRequest.body.user.profile.bio).toBe('bio');
@@ -92,11 +76,7 @@ describe('Sanitization Middleware', () => {
         items: ['<script>test</script>', 'normal string', '<script>another</script>'],
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.items[0]).toBe('');
       expect(mockRequest.body.items[1]).toBe('normal string');
@@ -110,11 +90,7 @@ describe('Sanitization Middleware', () => {
         email: 'john@example.com',
       };
 
-      sanitizeInput(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      sanitizeInput(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.name).toBe('John Doe');
       expect(mockRequest.body.email).toBe('john@example.com');
@@ -129,11 +105,7 @@ describe('Sanitization Middleware', () => {
         password: { $ne: null },
       };
 
-      preventNoSQLInjection(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      preventNoSQLInjection(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.password).toEqual({});
       expect(nextFunction).toHaveBeenCalled();
@@ -146,11 +118,7 @@ describe('Sanitization Middleware', () => {
         },
       };
 
-      preventNoSQLInjection(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      preventNoSQLInjection(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.filter).toEqual({});
       expect(nextFunction).toHaveBeenCalled();
@@ -165,11 +133,7 @@ describe('Sanitization Middleware', () => {
         },
       };
 
-      preventNoSQLInjection(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      preventNoSQLInjection(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.user.credentials.password).toEqual({});
       expect(nextFunction).toHaveBeenCalled();
@@ -182,11 +146,7 @@ describe('Sanitization Middleware', () => {
         age: 25,
       };
 
-      preventNoSQLInjection(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      preventNoSQLInjection(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.username).toBe('testuser');
       expect(mockRequest.body.email).toBe('test@example.com');
@@ -202,11 +162,7 @@ describe('Sanitization Middleware', () => {
         ],
       };
 
-      preventNoSQLInjection(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      preventNoSQLInjection(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockRequest.body.items[0]).toEqual({ name: 'item1', price: 100 });
       expect(mockRequest.body.items[1]).toEqual({ name: 'item2' });

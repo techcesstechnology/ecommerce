@@ -29,18 +29,11 @@ describe('Validation Middleware', () => {
         password: 'TestPassword123!',
       };
 
-      const validations = [
-        body('email').isEmail(),
-        body('password').isLength({ min: 8 }),
-      ];
+      const validations = [body('email').isEmail(), body('password').isLength({ min: 8 })];
 
       const middleware = validate(validations);
 
-      await middleware(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(nextFunction).toHaveBeenCalled();
       expect(mockResponse.status).not.toHaveBeenCalled();
@@ -59,11 +52,7 @@ describe('Validation Middleware', () => {
 
       const middleware = validate(validations);
 
-      await middleware(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith(
@@ -87,11 +76,7 @@ describe('Validation Middleware', () => {
 
       const middleware = validate(validations);
 
-      await middleware(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      );
+      await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({

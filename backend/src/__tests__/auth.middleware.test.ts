@@ -33,11 +33,7 @@ describe('Authentication Middleware', () => {
 
   describe('authenticate', () => {
     it('should return 401 if no authorization header', async () => {
-      await authenticate(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      await authenticate(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -52,11 +48,7 @@ describe('Authentication Middleware', () => {
         authorization: 'InvalidFormat token',
       };
 
-      await authenticate(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      await authenticate(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -73,11 +65,7 @@ describe('Authentication Middleware', () => {
 
       (authService.verifyAccessToken as jest.Mock).mockReturnValue(null);
 
-      await authenticate(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      await authenticate(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -100,11 +88,7 @@ describe('Authentication Middleware', () => {
 
       (authService.verifyAccessToken as jest.Mock).mockReturnValue(mockPayload);
 
-      await authenticate(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      await authenticate(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockRequest.user).toEqual(mockPayload);
       expect(nextFunction).toHaveBeenCalled();
@@ -116,11 +100,7 @@ describe('Authentication Middleware', () => {
     it('should return 401 if user is not authenticated', () => {
       const authorizeMiddleware = authorize('admin');
 
-      authorizeMiddleware(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      authorizeMiddleware(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -139,11 +119,7 @@ describe('Authentication Middleware', () => {
 
       const authorizeMiddleware = authorize('admin');
 
-      authorizeMiddleware(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      authorizeMiddleware(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -162,11 +138,7 @@ describe('Authentication Middleware', () => {
 
       const authorizeMiddleware = authorize('admin');
 
-      authorizeMiddleware(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      authorizeMiddleware(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(nextFunction).toHaveBeenCalled();
       expect(mockResponse.status).not.toHaveBeenCalled();
@@ -181,11 +153,7 @@ describe('Authentication Middleware', () => {
 
       const authorizeMiddleware = authorize('admin', 'vendor');
 
-      authorizeMiddleware(
-        mockRequest as AuthRequest,
-        mockResponse as Response,
-        nextFunction
-      );
+      authorizeMiddleware(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
 
       expect(nextFunction).toHaveBeenCalled();
       expect(mockResponse.status).not.toHaveBeenCalled();
