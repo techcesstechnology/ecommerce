@@ -14,10 +14,10 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
-    "migration:generate": "npm run typeorm -- migration:generate -d src/config/database.config.ts",
+    "migration:generate": "npm run typeorm -- migration:generate -d src/config/data-source.ts",
     "migration:create": "npm run typeorm -- migration:create",
-    "migration:run": "npm run typeorm -- migration:run -d src/config/database.config.ts",
-    "migration:revert": "npm run typeorm -- migration:revert -d src/config/database.config.ts"
+    "migration:run": "npm run typeorm -- migration:run -d src/config/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d src/config/data-source.ts"
   },
   "keywords": [
     "api",
