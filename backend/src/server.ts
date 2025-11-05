@@ -4,7 +4,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
@@ -13,15 +12,18 @@ import authRoutes from './routes/auth.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
+import { getConfig } from './config';
 
-// Load environment variables
-dotenv.config({ path: '../.env' });
+// Get configuration
+const config = getConfig();
+const apiConfig = config.getAPIConfig();
+const corsConfig = config.getCORSConfig();
 
 const app: Application = express();
-const PORT = Number(process.env.PORT || process.env.BACKEND_PORT) || 5000;
+const PORT = apiConfig.port;
 
 // Trust proxy - important for rate limiting and getting correct IP addresses
-app.set('trust proxy', 1);
+app.set('trust proxy', apiConfig.trustProxy);
 
 // Security Middleware
 app.use(
@@ -43,15 +45,12 @@ app.use(
 );
 
 // CORS configuration
-const defaultOrigins = ['http://localhost:5000', 'http://localhost:19006'];
+const corsOrigins = corsConfig.origins;
 
+// Add Replit domain if available
 if (process.env.REPLIT_DEV_DOMAIN) {
-  defaultOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+  corsOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
 }
-
-const corsOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-  : defaultOrigins;
 
 app.use(
   cors({
@@ -65,13 +64,15 @@ app.use(
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true,
+    credentials: corsConfig.credentials,
+    methods: corsConfig.allowedMethods,
+    allowedHeaders: corsConfig.allowedHeaders,
   })
 );
 
 // Body parsing middleware
-app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: apiConfig.bodyLimit })); // Limit body size to prevent DoS
+app.use(express.urlencoded({ extended: true, limit: apiConfig.bodyLimit }));
 
 // Cookie parser
 // Note: CSRF protection is not required for API-only backends that use JWT tokens
@@ -107,10 +108,11 @@ app.use('/api/auth', authRoutes);
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: 'Welcome to FreshRoute API',
-    version: '1.0.0',
+    version: apiConfig.version,
+    environment: config.getEnvironment(),
     endpoints: {
-      health: '/api/health',
-      auth: '/api/auth',
+      health: `${apiConfig.prefix}/health`,
+      auth: `${apiConfig.prefix}/auth`,
     },
   });
 });
@@ -128,7 +130,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err.stack);
 
   // Don't expose error details in production
-  const message = process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong';
+  const message = config.isDevelopment() ? err.message : 'Something went wrong';
 
   res.status(500).json({
     error: 'Internal Server Error',
@@ -139,15 +141,19 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // Initialize database and start server
 async function startServer() {
   try {
+    // Print configuration summary
+    config.printConfigSummary();
+
     // Initialize database connection
     await initializeDatabase();
     console.log('✅ Database initialized successfully');
 
     // Start server only if not in test mode
-    if (process.env.NODE_ENV !== 'test') {
+    if (!config.isTest()) {
       app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`📝 Environment: ${config.getEnvironment()}`);
+        console.log(`🌐 API URL: http://${apiConfig.host}:${PORT}${apiConfig.prefix}`);
       });
     }
   } catch (error) {
@@ -170,7 +176,7 @@ process.on('SIGINT', async () => {
 });
 
 // Start the server
-if (process.env.NODE_ENV !== 'test') {
+if (!config.isTest()) {
   startServer();
 }
 

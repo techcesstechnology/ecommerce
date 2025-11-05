@@ -1,13 +1,18 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { getConfig } from '../config';
+
+// Get rate limit configuration
+const config = getConfig();
+const rateLimitConfig = config.getRateLimitConfig();
 
 /**
  * Rate limiter for login attempts
  * Prevents brute force attacks
  */
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  windowMs: rateLimitConfig.loginWindowMs,
+  max: rateLimitConfig.loginMaxRequests,
   message: {
     error: 'Too Many Requests',
     message: 'Too many login attempts. Please try again later.',
@@ -28,8 +33,8 @@ export const loginLimiter = rateLimit({
  * Prevents spam registrations
  */
 export const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 registrations per hour
+  windowMs: rateLimitConfig.registerWindowMs,
+  max: rateLimitConfig.registerMaxRequests,
   message: {
     error: 'Too Many Requests',
     message: 'Too many registration attempts. Please try again later.',
@@ -50,8 +55,8 @@ export const registerLimiter = rateLimit({
  * Prevents abuse of password reset functionality
  */
 export const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 password reset requests per hour
+  windowMs: rateLimitConfig.passwordResetWindowMs,
+  max: rateLimitConfig.passwordResetMaxRequests,
   message: {
     error: 'Too Many Requests',
     message: 'Too many password reset requests. Please try again later.',
@@ -72,8 +77,8 @@ export const passwordResetLimiter = rateLimit({
  * Prevents API abuse
  */
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: rateLimitConfig.windowMs,
+  max: rateLimitConfig.maxRequests,
   message: {
     error: 'Too Many Requests',
     message: 'Too many requests. Please try again later.',
