@@ -3,7 +3,8 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/src/config/environments/'],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
@@ -14,6 +15,7 @@ module.exports = {
     '!src/**/*.spec.ts',
     '!src/migrations/**',
     '!src/seeds/**',
+    '!src/config/environments/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
