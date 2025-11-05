@@ -115,6 +115,49 @@ npm run test:backend     # Test backend
 npm run lint:frontend    # Lint frontend
 ```
 
+## ✨ Features
+
+### Product Management System
+
+- **Comprehensive Product CRUD**: Create, read, update, and delete products with full details
+- **Inventory Tracking**: Real-time stock management with low stock alerts
+- **Category Management**: Hierarchical product categorization
+- **Advanced Search**: Full-text search with filters (category, status, price range, tags)
+- **Bulk Operations**: Batch create, update, delete, and stock adjustments
+- **Product Variants**: Support for SKU, pricing, images, specifications
+- **Status Workflow**: Draft, published, and archived product states
+
+### Admin Dashboard
+
+- **Real-time Analytics**: Dashboard with key metrics and insights
+- **Product Manager**: Intuitive interface for managing product catalog
+- **Order Management**: Track and manage customer orders
+- **Category Manager**: Visual category organization
+- **Sales Analytics**: Revenue tracking and product performance
+- **Inventory Alerts**: Automatic notifications for low/out-of-stock items
+- **Settings Panel**: Configure store settings, tax, and shipping
+
+### Order Management
+
+- **Order Processing**: Complete order lifecycle from creation to fulfillment
+- **Automatic Stock Updates**: Stock deduction on order and restoration on cancellation
+- **Payment Tracking**: Monitor payment status and methods
+- **Order Statistics**: Comprehensive reporting and analytics
+- **Customer Management**: Track customer orders and details
+
+### API Features
+
+- **RESTful API**: Well-structured endpoints following REST principles
+- **Type-Safe**: Full TypeScript implementation with strict typing
+- **Validation**: Request validation with express-validator
+- **Error Handling**: Consistent error responses
+- **Pagination**: Efficient data loading with cursor-based pagination
+- **Filtering & Sorting**: Flexible query parameters
+- **Authentication**: Role-based access control (RBAC)
+- **Audit Logging**: Track admin actions and changes
+
+For detailed information about the Product Management System, see [PRODUCT_MANAGEMENT_GUIDE.md](./PRODUCT_MANAGEMENT_GUIDE.md).
+
 ## 🗂️ Project Structure
 
 ### Backend (`/backend`)
