@@ -54,13 +54,16 @@ export async function performLoadTest(
       const requestStart = performance.now();
       
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
         const fetchOptions: RequestInit = {
           method,
           headers: {
             'Content-Type': 'application/json',
             ...headers,
           },
-          signal: AbortSignal.timeout(timeout),
+          signal: controller.signal,
         };
 
         if (body && method !== 'GET') {
@@ -68,6 +71,7 @@ export async function performLoadTest(
         }
 
         const response = await fetch(url, fetchOptions);
+        clearTimeout(timeoutId);
         const requestEnd = performance.now();
 
         responseTimes.push(requestEnd - requestStart);
