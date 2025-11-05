@@ -85,7 +85,11 @@ export class S3StorageService {
       return;
     }
 
-    if (!storageConfig.awsAccessKeyId || !storageConfig.awsSecretAccessKey || !storageConfig.s3BucketName) {
+    if (
+      !storageConfig.awsAccessKeyId ||
+      !storageConfig.awsSecretAccessKey ||
+      !storageConfig.s3BucketName
+    ) {
       logger.warn('AWS S3 credentials not configured');
       return;
     }
@@ -122,13 +126,7 @@ export class S3StorageService {
     options: ImageOptimizationOptions = {}
   ): Promise<Buffer> {
     try {
-      const {
-        width,
-        height,
-        quality = 80,
-        format = 'webp',
-        fit = 'cover',
-      } = options;
+      const { width, height, quality = 80, format = 'webp', fit = 'cover' } = options;
 
       let sharpInstance = sharp(buffer);
 
@@ -185,7 +183,7 @@ export class S3StorageService {
       // Optimize image if requested
       if (options.optimize && this.isImageFile(filename)) {
         fileBuffer = await this.optimizeImage(buffer, options.optimizationOptions);
-        
+
         // Update content type based on optimization format
         if (options.optimizationOptions?.format) {
           contentType = `image/${options.optimizationOptions.format}`;
@@ -231,7 +229,7 @@ export class S3StorageService {
       });
 
       const response = await this.s3Client!.send(command);
-      
+
       if (!response.Body) {
         throw new Error('File not found');
       }
@@ -308,7 +306,7 @@ export class S3StorageService {
       });
 
       const response = await this.s3Client!.send(command);
-      
+
       return response.Contents?.map((item) => item.Key || '') || [];
     } catch (error: any) {
       logger.error('S3 list failed', error.stack);
@@ -319,10 +317,7 @@ export class S3StorageService {
   /**
    * Generate signed URL for secure file access
    */
-  public async getSignedUrl(
-    key: string,
-    options: SignedUrlOptions = {}
-  ): Promise<string> {
+  public async getSignedUrl(key: string, options: SignedUrlOptions = {}): Promise<string> {
     if (!this.isReady()) {
       throw new Error('S3 storage is not configured');
     }

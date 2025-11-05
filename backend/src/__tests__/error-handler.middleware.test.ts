@@ -3,7 +3,11 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/error-handler.middleware';
+import {
+  errorHandler,
+  notFoundHandler,
+  asyncHandler,
+} from '../middleware/error-handler.middleware';
 import { BadRequestError, InternalServerError } from '../utils/errors';
 import { logger } from '../services/logger.service';
 
@@ -44,7 +48,7 @@ describe('Error Handler Middleware', () => {
   describe('errorHandler', () => {
     it('should handle AppError correctly', () => {
       const error = new BadRequestError('Invalid input', 'INVALID_INPUT');
-      
+
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
@@ -61,7 +65,7 @@ describe('Error Handler Middleware', () => {
 
     it('should handle generic Error', () => {
       const error = new Error('Something went wrong');
-      
+
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);

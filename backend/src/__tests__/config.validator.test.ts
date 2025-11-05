@@ -26,7 +26,7 @@ describe('Configuration Validator', () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    
+
     // Set minimum required env vars for tests
     process.env.DB_HOST = 'localhost';
     process.env.DB_PORT = '5432';

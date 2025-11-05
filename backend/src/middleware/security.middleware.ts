@@ -22,7 +22,7 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction): v
   // Check if request is not secure
   if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
     logger.warn(`Redirecting to HTTPS: ${req.originalUrl}`);
-    
+
     // Redirect to HTTPS
     return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
   }
@@ -69,7 +69,8 @@ export const securityHeaders = (_req: Request, res: Response, next: NextFunction
  * Adds a unique request ID to each request for tracing
  */
 export const requestId = (req: Request, res: Response, next: NextFunction): void => {
-  const requestId = req.get('X-Request-ID') || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const requestId =
+    req.get('X-Request-ID') || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   req.headers['x-request-id'] = requestId;
   res.setHeader('X-Request-ID', requestId);
   next();
@@ -84,24 +85,30 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
   const start = Date.now();
 
   // Log request
-  logger.info(`→ ${req.method} ${req.originalUrl}`, JSON.stringify({
-    requestId,
-    method: req.method,
-    url: req.originalUrl,
-    ip: req.ip,
-    userAgent: req.get('user-agent'),
-  }));
+  logger.info(
+    `→ ${req.method} ${req.originalUrl}`,
+    JSON.stringify({
+      requestId,
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    })
+  );
 
   // Log response when finished
   res.on('finish', () => {
     const duration = Date.now() - start;
-    logger.info(`← ${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`, JSON.stringify({
-      requestId,
-      method: req.method,
-      url: req.originalUrl,
-      statusCode: res.statusCode,
-      duration,
-    }));
+    logger.info(
+      `← ${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`,
+      JSON.stringify({
+        requestId,
+        method: req.method,
+        url: req.originalUrl,
+        statusCode: res.statusCode,
+        duration,
+      })
+    );
   });
 
   next();
@@ -111,9 +118,4 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
  * Production Middleware Configuration
  * Applies all production-specific middleware
  */
-export const productionMiddleware = [
-  requestId,
-  enforceHTTPS,
-  hstsHeaders,
-  securityHeaders,
-];
+export const productionMiddleware = [requestId, enforceHTTPS, hstsHeaders, securityHeaders];

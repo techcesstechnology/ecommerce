@@ -66,10 +66,10 @@ class ConfigService {
 
     // Load environment variables
     this.loadEnvironmentVariables();
-    
+
     // Validate configuration
     validateConfig();
-    
+
     // Build configuration object
     this.config = this.buildConfig();
     this.initialized = true;
@@ -263,11 +263,11 @@ class ConfigService {
       taxRate: parseFloat(process.env[ENV_KEYS.TAX_RATE], 0.15), // 15% default
       currency: getOptionalEnv(ENV_KEYS.CURRENCY, 'USD'),
       currencySymbol: getOptionalEnv(ENV_KEYS.CURRENCY_SYMBOL, '$'),
-      shippingFeeBase: parseFloat(process.env[ENV_KEYS.SHIPPING_FEE_BASE], 5.00),
-      shippingFeePerKm: parseFloat(process.env[ENV_KEYS.SHIPPING_FEE_PER_KM], 0.50),
-      freeShippingThreshold: parseFloat(process.env[ENV_KEYS.FREE_SHIPPING_THRESHOLD], 50.00),
-      minOrderAmount: parseFloat(process.env[ENV_KEYS.MIN_ORDER_AMOUNT], 10.00),
-      maxOrderAmount: parseFloat(process.env[ENV_KEYS.MAX_ORDER_AMOUNT], 10000.00),
+      shippingFeeBase: parseFloat(process.env[ENV_KEYS.SHIPPING_FEE_BASE], 5.0),
+      shippingFeePerKm: parseFloat(process.env[ENV_KEYS.SHIPPING_FEE_PER_KM], 0.5),
+      freeShippingThreshold: parseFloat(process.env[ENV_KEYS.FREE_SHIPPING_THRESHOLD], 50.0),
+      minOrderAmount: parseFloat(process.env[ENV_KEYS.MIN_ORDER_AMOUNT], 10.0),
+      maxOrderAmount: parseFloat(process.env[ENV_KEYS.MAX_ORDER_AMOUNT], 10000.0),
       orderCancellationWindow: 30 * 60 * 1000, // 30 minutes
     };
   }
@@ -291,8 +291,11 @@ class ConfigService {
    * Build storage configuration
    */
   private buildStorageConfig(): StorageConfig {
-    const provider = getOptionalEnv(ENV_KEYS.STORAGE_PROVIDER, 'local') as StorageConfig['provider'];
-    
+    const provider = getOptionalEnv(
+      ENV_KEYS.STORAGE_PROVIDER,
+      'local'
+    ) as StorageConfig['provider'];
+
     return {
       provider,
       awsAccessKeyId: getOptionalEnv(ENV_KEYS.AWS_ACCESS_KEY_ID, ''),
@@ -308,7 +311,7 @@ class ConfigService {
    */
   private buildLoggingConfig(env: Environment): LoggingConfig {
     const defaultLevel = env === Environment.PRODUCTION ? 'error' : 'debug';
-    
+
     return {
       level: getOptionalEnv(ENV_KEYS.LOG_LEVEL, defaultLevel) as LoggingConfig['level'],
       format: getOptionalEnv(ENV_KEYS.LOG_FORMAT, 'json') as LoggingConfig['format'],
@@ -323,7 +326,7 @@ class ConfigService {
    */
   private buildPaymentConfig(): PaymentConfig {
     const provider = getOptionalEnv(ENV_KEYS.PAYMENT_PROVIDER, 'mock') as PaymentConfig['provider'];
-    
+
     return {
       provider,
       apiKey: getOptionalEnv(ENV_KEYS.PAYMENT_API_KEY, ''),
@@ -468,11 +471,17 @@ class ConfigService {
     console.log(`Environment: ${this.config.env}`);
     console.log(`API Port: ${this.config.api.port}`);
     console.log(`API Host: ${this.config.api.host}`);
-    console.log(`Database: ${this.config.database.host}:${this.config.database.port}/${this.config.database.name}`);
+    console.log(
+      `Database: ${this.config.database.host}:${this.config.database.port}/${this.config.database.name}`
+    );
     console.log(`Redis: ${this.config.redis.host}:${this.config.redis.port}`);
     console.log(`CORS Origins: ${this.config.cors.origins.join(', ')}`);
-    console.log(`Rate Limit: ${this.config.rateLimit.maxRequests} requests per ${this.config.rateLimit.windowMs / 1000}s`);
-    console.log(`Currency: ${this.config.business.currency} (${this.config.business.currencySymbol})`);
+    console.log(
+      `Rate Limit: ${this.config.rateLimit.maxRequests} requests per ${this.config.rateLimit.windowMs / 1000}s`
+    );
+    console.log(
+      `Currency: ${this.config.business.currency} (${this.config.business.currencySymbol})`
+    );
     console.log(`Tax Rate: ${(this.config.business.taxRate * 100).toFixed(1)}%`);
     console.log(`Storage Provider: ${this.config.storage.provider}`);
     console.log(`Payment Provider: ${this.config.payment.provider}`);
@@ -492,7 +501,7 @@ export const config = {
   get instance() {
     console.warn('⚠️  config.instance is deprecated. Please use getConfig() instead.');
     return ConfigService.getInstance();
-  }
+  },
 };
 
 // Export class for testing

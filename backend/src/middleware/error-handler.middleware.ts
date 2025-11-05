@@ -97,11 +97,14 @@ export const errorHandler = (
  * Not Found handler (404)
  */
 export const notFoundHandler = (req: Request, res: Response): void => {
-  logger.warn(`404 Not Found: ${req.method} ${req.originalUrl}`, JSON.stringify({
-    method: req.method,
-    url: req.originalUrl,
-    ip: req.ip,
-  }));
+  logger.warn(
+    `404 Not Found: ${req.method} ${req.originalUrl}`,
+    JSON.stringify({
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.ip,
+    })
+  );
 
   res.status(404).json({
     error: 'Not Found',

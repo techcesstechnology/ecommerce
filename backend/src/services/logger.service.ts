@@ -118,9 +118,7 @@ export class LoggerService {
   private logger: winston.Logger;
 
   constructor(context?: string) {
-    this.logger = context
-      ? logger.child({ context })
-      : logger;
+    this.logger = context ? logger.child({ context }) : logger;
   }
 
   /**

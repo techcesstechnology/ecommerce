@@ -142,7 +142,7 @@ export class RedisService {
     try {
       const prefixedKey = this.getPrefixedKey(key);
       const value = await this.client!.get(prefixedKey);
-      
+
       if (!value) {
         return null;
       }
@@ -207,7 +207,7 @@ export class RedisService {
     try {
       const prefixedPattern = this.getPrefixedKey(pattern);
       const keys = await this.client!.keys(prefixedPattern);
-      
+
       if (keys.length === 0) {
         return 0;
       }
@@ -288,12 +288,12 @@ export class RedisService {
     try {
       const pattern = this.getPrefixedKey('*');
       const keys = await this.client!.keys(pattern);
-      
+
       if (keys.length > 0) {
         await this.client!.del(keys);
         logger.info(`Cleared ${keys.length} cache entries`);
       }
-      
+
       return true;
     } catch (error: any) {
       logger.error('Redis clear error', error.stack);
