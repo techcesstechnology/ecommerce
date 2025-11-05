@@ -1,35 +1,26 @@
-import { v4 as uuidv4 } from 'uuid';
-import { AuditLog, CreateAuditLogDto } from '../models/audit.model';
-
-// In-memory storage for audit logs (replace with database in production)
-// TODO: Replace with PostgreSQL - suggested schema:
-// CREATE TABLE audit_logs (
-//   id UUID PRIMARY KEY,
-//   user_id UUID NOT NULL,
-//   user_email VARCHAR(255) NOT NULL,
-//   action VARCHAR(100) NOT NULL,
-//   resource VARCHAR(100) NOT NULL,
-//   resource_id UUID,
-//   details JSONB,
-//   ip_address INET,
-//   user_agent TEXT,
-//   timestamp TIMESTAMP NOT NULL DEFAULT NOW()
-// );
-const auditLogsStore: AuditLog[] = [];
+import { Repository } from 'typeorm';
+import { AppDataSource } from '../config/database.config';
+import { AuditLog } from '../models/audit-log.entity';
+import { CreateAuditLogDto } from '../models/audit.model';
 
 export class AuditService {
+  private auditLogRepository: Repository<AuditLog>;
+
+  constructor() {
+    this.auditLogRepository = AppDataSource.getRepository(AuditLog);
+  }
+
   /**
    * Create an audit log entry
    */
   async createLog(data: CreateAuditLogDto): Promise<AuditLog> {
-    const log: AuditLog = {
-      id: uuidv4(),
-      ...data,
-      timestamp: new Date(),
-    };
-
-    auditLogsStore.push(log);
-    return log;
+    try {
+      const log = this.auditLogRepository.create(data);
+      return await this.auditLogRepository.save(log);
+    } catch (error) {
+      console.error('Error creating audit log:', error);
+      throw new Error('Failed to create audit log');
+    }
   }
 
   /**
@@ -43,43 +34,64 @@ export class AuditService {
     endDate?: Date;
     limit?: number;
   }): Promise<AuditLog[]> {
-    let logs = [...auditLogsStore];
+    try {
+      const query = this.auditLogRepository.createQueryBuilder('audit_log');
 
-    if (filters.userId) {
-      logs = logs.filter((l) => l.userId === filters.userId);
+      if (filters.userId) {
+        query.andWhere('audit_log.userId = :userId', { userId: filters.userId });
+      }
+
+      if (filters.resource) {
+        query.andWhere('audit_log.resource = :resource', { resource: filters.resource });
+      }
+
+      if (filters.action) {
+        query.andWhere('audit_log.action = :action', { action: filters.action });
+      }
+
+      if (filters.startDate && filters.endDate) {
+        query.andWhere('audit_log.timestamp BETWEEN :startDate AND :endDate', {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        });
+      } else if (filters.startDate) {
+        query.andWhere('audit_log.timestamp >= :startDate', { startDate: filters.startDate });
+      } else if (filters.endDate) {
+        query.andWhere('audit_log.timestamp <= :endDate', { endDate: filters.endDate });
+      }
+
+      // Sort by timestamp descending (newest first)
+      query.orderBy('audit_log.timestamp', 'DESC');
+
+      // Apply limit
+      const limit = filters.limit || 100;
+      query.take(limit);
+
+      return await query.getMany();
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      throw new Error('Failed to fetch audit logs');
     }
-
-    if (filters.resource) {
-      logs = logs.filter((l) => l.resource === filters.resource);
-    }
-
-    if (filters.action) {
-      logs = logs.filter((l) => l.action === filters.action);
-    }
-
-    if (filters.startDate) {
-      logs = logs.filter((l) => l.timestamp >= filters.startDate!);
-    }
-
-    if (filters.endDate) {
-      logs = logs.filter((l) => l.timestamp <= filters.endDate!);
-    }
-
-    // Sort by timestamp descending (newest first)
-    logs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-    // Apply limit
-    const limit = filters.limit || 100;
-    return logs.slice(0, limit);
   }
 
   /**
    * Get logs for a specific resource
    */
   async getResourceLogs(resource: string, resourceId: string): Promise<AuditLog[]> {
-    return auditLogsStore
-      .filter((l) => l.resource === resource && l.resourceId === resourceId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    try {
+      return await this.auditLogRepository.find({
+        where: {
+          resource,
+          resourceId,
+        },
+        order: {
+          timestamp: 'DESC',
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching resource logs:', error);
+      throw new Error('Failed to fetch resource logs');
+    }
   }
 }
 
