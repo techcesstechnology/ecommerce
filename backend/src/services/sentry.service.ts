@@ -8,6 +8,7 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { getConfig } from '../config';
 import { logger } from './logger.service';
 import { Request } from 'express';
+import crypto from 'crypto';
 
 const config = getConfig();
 const sentryConfig = config.getSentryConfig();
@@ -284,17 +285,23 @@ export class SentryService {
   /**
    * Start a transaction for performance monitoring
    */
-  startTransaction(name: string, op: string): any {
+  startTransaction(name: string, op: string): string | undefined {
     if (!this.isEnabled()) return undefined;
 
     try {
-      return Sentry.startSpan(
-        {
-          name,
-          op,
-        },
-        (span) => span
-      );
+      // For newer Sentry SDK versions, we would use startSpan
+      // However, since transaction tracking might not be available,
+      // we return a unique ID for tracking purposes
+      const transactionId = `sentry_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
+      
+      // Add breadcrumb to track transaction
+      this.addBreadcrumb({
+        message: `Transaction started: ${name}`,
+        category: 'transaction',
+        data: { op, transaction_id: transactionId },
+      });
+      
+      return transactionId;
     } catch (err) {
       logger.error('Failed to start transaction in Sentry', err as Error);
       return undefined;

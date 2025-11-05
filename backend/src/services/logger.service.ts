@@ -38,22 +38,32 @@ export interface LoggerOptions {
  * Rate limiting cache for logging
  */
 const logRateLimitCache = new Map<string, { count: number; resetTime: number }>();
-const LOG_RATE_LIMIT_WINDOW = 60000; // 1 minute
-const LOG_RATE_LIMIT_MAX = 100; // Max 100 logs per minute per key
+
+// Rate limit configuration - can be overridden via config
+const getLogRateLimitConfig = () => {
+  const envWindow = parseInt(process.env.LOG_RATE_LIMIT_WINDOW_MS || '60000', 10);
+  const envMax = parseInt(process.env.LOG_RATE_LIMIT_MAX || '100', 10);
+  
+  return {
+    window: isNaN(envWindow) ? 60000 : envWindow,
+    max: isNaN(envMax) ? 100 : envMax,
+  };
+};
 
 /**
  * Check if log should be rate limited
  */
 function shouldRateLimit(key: string): boolean {
+  const config = getLogRateLimitConfig();
   const now = Date.now();
   const entry = logRateLimitCache.get(key);
 
   if (!entry || entry.resetTime < now) {
-    logRateLimitCache.set(key, { count: 1, resetTime: now + LOG_RATE_LIMIT_WINDOW });
+    logRateLimitCache.set(key, { count: 1, resetTime: now + config.window });
     return false;
   }
 
-  if (entry.count >= LOG_RATE_LIMIT_MAX) {
+  if (entry.count >= config.max) {
     return true;
   }
 

@@ -386,11 +386,17 @@ class ConfigService {
     const provider = getOptionalEnv(
       ENV_KEYS.ANALYTICS_PROVIDER,
       'mock'
-    ) as AnalyticsConfig['provider'];
+    );
+    
+    // Validate provider value
+    const validProviders = ['segment', 'mixpanel', 'amplitude', 'mock'];
+    const validatedProvider = validProviders.includes(provider) 
+      ? (provider as AnalyticsConfig['provider'])
+      : 'mock';
 
     return {
       enabled: parseBoolean(process.env[ENV_KEYS.ANALYTICS_ENABLED], false),
-      provider,
+      provider: validatedProvider,
       apiKey: getOptionalEnv(ENV_KEYS.ANALYTICS_API_KEY, ''),
       trackPageViews: true,
       trackErrors: true,

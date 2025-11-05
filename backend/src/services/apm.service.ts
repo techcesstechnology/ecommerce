@@ -207,7 +207,7 @@ export class ApmService {
    * Generate transaction ID
    */
   private generateTransactionId(): string {
-    return `txn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    return `txn_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
   }
 
   /**

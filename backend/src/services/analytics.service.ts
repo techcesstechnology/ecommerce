@@ -101,9 +101,12 @@ export class AnalyticsService {
       // Add to queue
       this.eventQueue.push(eventWithTimestamp);
 
-      // Flush if queue is full
+      // Flush asynchronously if queue is full (don't block)
       if (this.eventQueue.length >= this.MAX_QUEUE_SIZE) {
-        await this.flush();
+        // Use setImmediate to flush on next tick without blocking
+        setImmediate(() => this.flush().catch(err => {
+          logger.error('Failed to auto-flush analytics events', err);
+        }));
       }
 
       logger.debug(`Event tracked: ${event.eventName}`, {

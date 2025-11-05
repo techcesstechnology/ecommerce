@@ -163,8 +163,11 @@ export const trackError = (error: Error, req: Request): void => {
     apmService.recordError(error, req.transactionId);
   }
 
-  // Track in Sentry
+  // Track in Sentry with sanitized data
   if (sentryService.isEnabled()) {
+    // Sanitize request body to remove sensitive fields
+    const sanitizedBody = req.body ? sanitizeRequestBody(req.body) : undefined;
+    
     sentryService.captureException(error, {
       tags: {
         correlation_id: req.correlationId || 'unknown',
@@ -175,7 +178,7 @@ export const trackError = (error: Error, req: Request): void => {
         url: req.originalUrl,
         query: req.query,
         params: req.params,
-        body: req.body,
+        body: sanitizedBody,
       },
     });
   }
@@ -189,3 +192,43 @@ export const trackError = (error: Error, req: Request): void => {
     });
   }
 };
+
+/**
+ * Sanitize request body to remove sensitive fields
+ */
+function sanitizeRequestBody(body: any): any {
+  if (!body || typeof body !== 'object') return body;
+  
+  const sensitiveFields = [
+    'password',
+    'token',
+    'secret',
+    'apiKey',
+    'api_key',
+    'creditCard',
+    'credit_card',
+    'cardNumber',
+    'card_number',
+    'cvv',
+    'ssn',
+    'socialSecurity',
+  ];
+  
+  const sanitized = { ...body };
+  
+  for (const field of sensitiveFields) {
+    if (field in sanitized) {
+      sanitized[field] = '[REDACTED]';
+    }
+    // Check nested fields
+    for (const key in sanitized) {
+      if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+        if (field in sanitized[key]) {
+          sanitized[key] = { ...sanitized[key], [field]: '[REDACTED]' };
+        }
+      }
+    }
+  }
+  
+  return sanitized;
+}
