@@ -45,4 +45,4 @@ externalPort = 3000
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "cd backend && NODE_ENV=production npm start"]
-build = ["bash", "-c", "npm run build"]
+build = ["bash", "-c", "npm run build:shared && npm run build:backend && npm run build:frontend"]
