@@ -98,11 +98,17 @@ export class RedisService {
         this.isConnected = false;
       });
 
-      // Connect to Redis
-      await client.connect();
+      // Connect to Redis with timeout
+      const connectPromise = client.connect();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
+      );
+      
+      await Promise.race([connectPromise, timeoutPromise]);
       logger.info(`✅ Redis connected successfully at ${redisConfig.host}:${redisConfig.port}`);
     } catch (error: any) {
-      logger.error('Failed to connect to Redis', error.stack);
+      logger.error('Failed to connect to Redis', error.stack || error.message);
+      logger.warn('⚠️  Continuing without Redis - caching will be disabled');
       this.isConnected = false;
       // Don't throw - allow app to continue without Redis
     }
