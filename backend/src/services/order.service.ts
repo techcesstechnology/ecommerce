@@ -1,6 +1,10 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { Order, OrderItem, ShippingAddress } from '../models/order.entity';
+import { Product } from '../models/product.entity';
+import { Cart } from '../models/cart.entity';
+import { CartService } from './cart.service';
+import { AppError } from '../utils/errors';
 
 export interface CreateOrderDto {
   userId: string;
@@ -34,9 +38,15 @@ export interface OrderFilters {
 
 export class OrderService {
   private orderRepository: Repository<Order>;
+  private productRepository: Repository<Product>;
+  private cartRepository: Repository<Cart>;
+  private cartService: CartService;
 
   constructor() {
     this.orderRepository = AppDataSource.getRepository(Order);
+    this.productRepository = AppDataSource.getRepository(Product);
+    this.cartRepository = AppDataSource.getRepository(Cart);
+    this.cartService = new CartService();
   }
 
   /**
@@ -267,6 +277,124 @@ export class OrderService {
       console.error('Error cancelling order:', error);
       throw error;
     }
+  }
+
+  /**
+   * Create order from cart (Checkout)
+   */
+  async createOrderFromCart(
+    userId: string,
+    shippingAddress: ShippingAddress,
+    paymentMethod: string,
+    deliverySlotId?: string,
+    deliveryDate?: Date,
+    deliveryTimeStart?: string,
+    deliveryTimeEnd?: string,
+    notes?: string
+  ): Promise<Order> {
+    const cart = await this.cartRepository.findOne({
+      where: { userId },
+      relations: ['items', 'items.product'],
+    });
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      throw new AppError('Cart is empty', 400);
+    }
+
+    for (const item of cart.items) {
+      if (!item.product.isActive) {
+        throw new AppError(`Product ${item.product.name} is no longer available`, 400);
+      }
+
+      if (item.product.stockQuantity < item.quantity) {
+        throw new AppError(
+          `Insufficient stock for ${item.product.name}. Only ${item.product.stockQuantity} available`,
+          400
+        );
+      }
+    }
+
+    const cartSummary = await this.cartService.getCartByUserId(userId);
+
+    const orderNumber = await this.generateOrderNumber();
+
+    const orderItems: OrderItem[] = cart.items.map((item) => ({
+      productId: item.productId,
+      name: item.product.name,
+      sku: item.product.sku,
+      price: Number(item.price),
+      quantity: item.quantity,
+      subtotal: Number(item.price) * item.quantity,
+    }));
+
+    const order = this.orderRepository.create({
+      orderNumber,
+      userId,
+      items: orderItems,
+      subtotal: cartSummary.subtotal,
+      tax: cartSummary.tax,
+      shippingCost: 0,
+      discount: cartSummary.discount,
+      total: cartSummary.total,
+      status: 'pending',
+      paymentStatus: 'pending',
+      paymentMethod,
+      shippingAddress,
+      deliverySlotId,
+      deliveryDate,
+      deliveryTimeStart,
+      deliveryTimeEnd,
+      promoCode: cart.promoCode,
+      notes,
+    });
+
+    await this.orderRepository.save(order);
+
+    for (const item of cart.items) {
+      await this.productRepository.decrement(
+        { id: item.productId },
+        'stockQuantity',
+        item.quantity
+      );
+    }
+
+    if (cart.promoCode) {
+      await this.cartService.incrementPromotionUsage(cart.promoCode);
+    }
+
+    await this.cartService.clearCart(userId);
+
+    return order;
+  }
+
+  /**
+   * Cancel order and restore inventory
+   */
+  async cancelOrderWithInventoryRestore(id: string, userId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id, userId },
+    });
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    if (!['pending', 'confirmed'].includes(order.status)) {
+      throw new AppError('Order cannot be cancelled at this stage', 400);
+    }
+
+    order.status = 'cancelled';
+    await this.orderRepository.save(order);
+
+    for (const item of order.items as OrderItem[]) {
+      await this.productRepository.increment(
+        { id: item.productId },
+        'stockQuantity',
+        item.quantity
+      );
+    }
+
+    return order;
   }
 }
 

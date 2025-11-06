@@ -11,6 +11,9 @@ import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
 import cartRoutes from './routes/cart.routes';
 import productRoutes from './routes/product.routes';
+import reviewRoutes from './routes/review.routes';
+import wishlistRoutes from './routes/wishlist.routes';
+import orderRoutes from './routes/order.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
@@ -120,6 +123,9 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -132,6 +138,9 @@ app.get('/', (_req: Request, res: Response) => {
       auth: `${apiConfig.prefix}/auth`,
       cart: `${apiConfig.prefix}/cart`,
       products: `${apiConfig.prefix}/products`,
+      reviews: `${apiConfig.prefix}/reviews`,
+      wishlist: `${apiConfig.prefix}/wishlist`,
+      orders: `${apiConfig.prefix}/orders`,
     },
   });
 });
