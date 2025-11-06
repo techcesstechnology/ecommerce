@@ -2,7 +2,7 @@
 
 ## Overview
 
-FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean market, offering a seamless shopping experience across web and mobile channels. It utilizes a monorepo architecture managing a backend API, a web frontend, a mobile app, and a shared code library. This structure promotes code reuse, consistent typing, and centralized tooling while allowing independent deployments. The platform integrates Zimbabwe-specific features like local payment methods (EcoCash), currency (ZWL), and tax calculations, aiming to address the unique needs of the local market. It includes a complete customer-facing experience with authentication, secure checkout, account management, and an in-progress admin dashboard.
+FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean market, offering a seamless shopping experience across web and mobile channels. It utilizes a monorepo architecture managing a backend API, a web frontend, a mobile app, and a shared code library. This structure promotes code reuse, consistent typing, and centralized tooling while allowing independent deployments. The platform integrates Zimbabwe-specific features like local payment methods (EcoCash), currency (ZWL), and tax calculations, aiming to address the unique needs of the local market. It includes a complete customer-facing experience with authentication, secure checkout, account management, and a comprehensive backend admin management system for managing all e-commerce operations.
 
 ## User Preferences
 
@@ -30,9 +30,30 @@ The mobile app is developed with React Native and Expo, utilizing Expo's managed
 
 This package centralizes common code, including TypeScript types, application-wide constants, utility functions (e.g., currency formatting), and shared validation logic, ensuring consistency across all applications. It compiles to CommonJS with declaration files and source maps.
 
+### Admin Management System
+
+The backend includes a complete admin management API with role-based authorization:
+
+- **Admin Routes**: All admin endpoints are protected by authentication and admin role authorization middleware
+- **Product Management**: Create, update, delete products and manage stock levels
+- **Category Management**: Full CRUD operations for product categories
+- **Order Management**: View all orders with filtering, update order status
+- **User Management**: View users with filtering, update user roles
+- **Delivery Slot Management**: Create and manage delivery time slots with capacity limits and overlap detection
+- **Promotion Management**: Full CRUD for promo codes (percentage, fixed, BOGO, free shipping types) with usage tracking and validation
+- **Dashboard Analytics**: Endpoint for order statistics and analytics
+- **Request Validation**: All admin endpoints use express-validator for input validation
+- **Error Handling**: Consistent error responses using custom domain errors (NotFoundError, ConflictError, BadRequestError, etc.)
+
+Admin API is available at `/api/admin/*` with endpoints like:
+- `/api/admin/products`, `/api/admin/categories`
+- `/api/admin/orders`, `/api/admin/users`
+- `/api/admin/delivery-slots`, `/api/admin/promotions`
+- `/api/admin/dashboard/stats`
+
 ### Code Quality & Development Workflow
 
-The project enforces code quality through strict TypeScript, ESLint with Prettier integration, and Husky + Lint-staged for pre-commit hooks, ensuring consistent style and early error detection.
+The project enforces code quality through strict TypeScript, ESLint with Prettier integration, and Husky + Lint-staged for pre-commit hooks, ensuring consistent style and early error detection. Custom error classes are used throughout the application for consistent error handling, with domain-specific errors (NotFoundError, ConflictError, ValidationError) that are automatically handled by the centralized error handling middleware.
 
 ## External Dependencies
 
