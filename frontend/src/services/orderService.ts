@@ -11,6 +11,25 @@ export interface CheckoutData {
   notes?: string;
 }
 
+export interface OrderFilters {
+  status?: string;
+  paymentStatus?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'orderDate' | 'totalAmount' | 'status';
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface UpdateOrderDto {
+  status?: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  trackingNumber?: string;
+  notes?: string;
+}
+
 export const orderService = {
   async checkout(data: CheckoutData) {
     const response = await api.post<ApiResponse<Order>>('/orders/checkout', data);
@@ -41,6 +60,18 @@ export const orderService = {
 
   async getOrderStats() {
     const response = await api.get<ApiResponse<any>>('/orders/stats');
+    return response.data.data;
+  },
+
+  async getAllOrders(filters: OrderFilters = {}) {
+    const response = await api.get<ApiResponse<{ orders: Order[]; total: number; page: number; totalPages: number }>>('/orders/all', {
+      params: filters,
+    });
+    return response.data.data;
+  },
+
+  async updateOrder(id: string, data: UpdateOrderDto) {
+    const response = await api.put<ApiResponse<Order>>(`/orders/${id}`, data);
     return response.data.data;
   },
 };
