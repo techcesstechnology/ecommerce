@@ -8,20 +8,13 @@ import { promotionService } from '../services/promotion.service';
 
 export class AdminController {
   createProduct = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const productData: CreateProductDto = req.body;
-      const product = await productService.createProduct(productData);
+    const productData: CreateProductDto = req.body;
+    const product = await productService.createProduct(productData);
 
-      res.status(201).json({
-        success: true,
-        data: product,
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to create product',
-      });
-    }
+    res.status(201).json({
+      success: true,
+      data: product,
+    });
   };
 
   updateProduct = async (req: Request, res: Response): Promise<void> => {
@@ -301,6 +294,16 @@ export class AdminController {
     }
   };
 
+  getDeliverySlot = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const slot = await deliverySlotService.getSlotById(id);
+
+    res.status(200).json({
+      success: true,
+      data: slot,
+    });
+  };
+
   getAllDeliverySlots = async (req: Request, res: Response): Promise<void> => {
     try {
       const { date, isActive, startDate, endDate } = req.query;
@@ -373,6 +376,16 @@ export class AdminController {
         error: error instanceof Error ? error.message : 'Failed to delete promotion',
       });
     }
+  };
+
+  getPromotion = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const promotion = await promotionService.getPromotionById(id);
+
+    res.status(200).json({
+      success: true,
+      data: promotion,
+    });
   };
 
   getAllPromotions = async (req: Request, res: Response): Promise<void> => {

@@ -1,6 +1,8 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { Promotion, PromotionType } from '../models/promotion.entity';
+import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
+import { logger } from '../services/logger.service';
 
 export interface CreatePromotionDto {
   code: string;
@@ -46,47 +48,48 @@ export class PromotionService {
   }
 
   async createPromotion(data: CreatePromotionDto): Promise<Promotion> {
-    try {
-      const existingPromo = await this.promotionRepository.findOne({
-        where: { code: data.code.toUpperCase() },
-      });
+    const existingPromo = await this.promotionRepository.findOne({
+      where: { code: data.code.toUpperCase() },
+    });
 
-      if (existingPromo) {
-        throw new Error('Promo code already exists');
-      }
-
-      const promotion = this.promotionRepository.create({
-        ...data,
-        code: data.code.toUpperCase(),
-      });
-
-      return await this.promotionRepository.save(promotion);
-    } catch (error) {
-      console.error('Error creating promotion:', error);
-      throw error;
+    if (existingPromo) {
+      throw new ConflictError('Promo code already exists');
     }
+
+    if (new Date(data.startDate) >= new Date(data.endDate)) {
+      throw new BadRequestError('End date must be after start date');
+    }
+
+    const promotion = this.promotionRepository.create({
+      ...data,
+      code: data.code.toUpperCase(),
+    });
+
+    return await this.promotionRepository.save(promotion);
   }
 
-  async getPromotionById(id: string): Promise<Promotion | null> {
-    try {
-      return await this.promotionRepository.findOne({
-        where: { id },
-      });
-    } catch (error) {
-      console.error('Error fetching promotion:', error);
-      throw new Error('Failed to fetch promotion');
+  async getPromotionById(id: string): Promise<Promotion> {
+    const promotion = await this.promotionRepository.findOne({
+      where: { id },
+    });
+
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
     }
+
+    return promotion;
   }
 
-  async getPromotionByCode(code: string): Promise<Promotion | null> {
-    try {
-      return await this.promotionRepository.findOne({
-        where: { code: code.toUpperCase() },
-      });
-    } catch (error) {
-      console.error('Error fetching promotion by code:', error);
-      throw new Error('Failed to fetch promotion by code');
+  async getPromotionByCode(code: string): Promise<Promotion> {
+    const promotion = await this.promotionRepository.findOne({
+      where: { code: code.toUpperCase() },
+    });
+
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
     }
+
+    return promotion;
   }
 
   async getAllPromotions(filters?: {
@@ -94,64 +97,53 @@ export class PromotionService {
     type?: PromotionType;
     current?: boolean;
   }): Promise<Promotion[]> {
-    try {
-      const query = this.promotionRepository.createQueryBuilder('promotion');
+    const query = this.promotionRepository.createQueryBuilder('promotion');
 
-      if (filters?.isActive !== undefined) {
-        query.andWhere('promotion.isActive = :isActive', { isActive: filters.isActive });
-      }
-
-      if (filters?.type) {
-        query.andWhere('promotion.type = :type', { type: filters.type });
-      }
-
-      if (filters?.current) {
-        const now = new Date();
-        query
-          .andWhere('promotion.startDate <= :now', { now })
-          .andWhere('promotion.endDate >= :now', { now });
-      }
-
-      return await query.orderBy('promotion.createdAt', 'DESC').getMany();
-    } catch (error) {
-      console.error('Error fetching promotions:', error);
-      throw new Error('Failed to fetch promotions');
+    if (filters?.isActive !== undefined) {
+      query.andWhere('promotion.isActive = :isActive', { isActive: filters.isActive });
     }
+
+    if (filters?.type) {
+      query.andWhere('promotion.type = :type', { type: filters.type });
+    }
+
+    if (filters?.current) {
+      const now = new Date();
+      query
+        .andWhere('promotion.startDate <= :now', { now })
+        .andWhere('promotion.endDate >= :now', { now });
+    }
+
+    return await query.orderBy('promotion.createdAt', 'DESC').getMany();
   }
 
   async updatePromotion(id: string, data: UpdatePromotionDto): Promise<Promotion> {
-    try {
-      const promotion = await this.promotionRepository.findOne({
-        where: { id },
-      });
+    const promotion = await this.promotionRepository.findOne({
+      where: { id },
+    });
 
-      if (!promotion) {
-        throw new Error('Promotion not found');
-      }
-
-      Object.assign(promotion, data);
-      return await this.promotionRepository.save(promotion);
-    } catch (error) {
-      console.error('Error updating promotion:', error);
-      throw error;
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
     }
+
+    if (data.startDate && data.endDate && new Date(data.startDate) >= new Date(data.endDate)) {
+      throw new BadRequestError('End date must be after start date');
+    }
+
+    Object.assign(promotion, data);
+    return await this.promotionRepository.save(promotion);
   }
 
   async deletePromotion(id: string): Promise<void> {
-    try {
-      const promotion = await this.promotionRepository.findOne({
-        where: { id },
-      });
+    const promotion = await this.promotionRepository.findOne({
+      where: { id },
+    });
 
-      if (!promotion) {
-        throw new Error('Promotion not found');
-      }
-
-      await this.promotionRepository.remove(promotion);
-    } catch (error) {
-      console.error('Error deleting promotion:', error);
-      throw error;
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
     }
+
+    await this.promotionRepository.remove(promotion);
   }
 
   async validatePromoCode(
@@ -227,21 +219,33 @@ export class PromotionService {
   }
 
   async incrementUsageCount(id: string): Promise<Promotion> {
-    try {
-      const promotion = await this.promotionRepository.findOne({
-        where: { id },
-      });
+    const promotion = await this.promotionRepository.findOne({
+      where: { id },
+    });
 
-      if (!promotion) {
-        throw new Error('Promotion not found');
-      }
-
-      promotion.usageCount += 1;
-      return await this.promotionRepository.save(promotion);
-    } catch (error) {
-      console.error('Error incrementing usage count:', error);
-      throw error;
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
     }
+
+    promotion.usageCount += 1;
+    return await this.promotionRepository.save(promotion);
+  }
+
+  async decrementUsageCount(id: string): Promise<Promotion> {
+    const promotion = await this.promotionRepository.findOne({
+      where: { id },
+    });
+
+    if (!promotion) {
+      throw new NotFoundError('Promotion not found');
+    }
+
+    if (promotion.usageCount > 0) {
+      promotion.usageCount -= 1;
+      return await this.promotionRepository.save(promotion);
+    }
+
+    return promotion;
   }
 
   calculateDiscount(promotion: Promotion, cartTotal: number): number {

@@ -1,6 +1,8 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { DeliverySlot } from '../models/delivery-slot.entity';
+import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
+import { logger } from '../services/logger.service';
 
 export interface CreateDeliverySlotDto {
   date: Date;
@@ -27,58 +29,51 @@ export class DeliverySlotService {
   }
 
   async createSlot(data: CreateDeliverySlotDto): Promise<DeliverySlot> {
-    try {
-      const existingSlot = await this.deliverySlotRepository.findOne({
-        where: {
-          date: data.date,
-          startTime: data.startTime,
-        },
-      });
+    const overlappingSlots = await this.deliverySlotRepository
+      .createQueryBuilder('slot')
+      .where('slot.date = :date', { date: data.date })
+      .andWhere(
+        '(slot.startTime < :endTime AND slot.endTime > :startTime)',
+        { startTime: data.startTime, endTime: data.endTime }
+      )
+      .getMany();
 
-      if (existingSlot) {
-        throw new Error('Delivery slot already exists for this date and time');
-      }
-
-      const slot = this.deliverySlotRepository.create(data);
-      return await this.deliverySlotRepository.save(slot);
-    } catch (error) {
-      console.error('Error creating delivery slot:', error);
-      throw error;
+    if (overlappingSlots.length > 0) {
+      throw new ConflictError('Delivery slot overlaps with existing slot(s) on this date');
     }
+
+    const slot = this.deliverySlotRepository.create(data);
+    return await this.deliverySlotRepository.save(slot);
   }
 
-  async getSlotById(id: string): Promise<DeliverySlot | null> {
-    try {
-      return await this.deliverySlotRepository.findOne({
-        where: { id },
-      });
-    } catch (error) {
-      console.error('Error fetching delivery slot:', error);
-      throw new Error('Failed to fetch delivery slot');
+  async getSlotById(id: string): Promise<DeliverySlot> {
+    const slot = await this.deliverySlotRepository.findOne({
+      where: { id },
+    });
+
+    if (!slot) {
+      throw new NotFoundError('Delivery slot not found');
     }
+
+    return slot;
   }
 
   async getAvailableSlots(startDate?: Date, endDate?: Date): Promise<DeliverySlot[]> {
-    try {
-      const query = this.deliverySlotRepository
-        .createQueryBuilder('slot')
-        .where('slot.isActive = :isActive', { isActive: true })
-        .andWhere('slot.currentOrders < slot.maxOrders');
+    const query = this.deliverySlotRepository
+      .createQueryBuilder('slot')
+      .where('slot.isActive = :isActive', { isActive: true })
+      .andWhere('slot.currentOrders < slot.maxOrders');
 
-      if (startDate && endDate) {
-        query.andWhere('slot.date BETWEEN :startDate AND :endDate', {
-          startDate,
-          endDate,
-        });
-      } else if (startDate) {
-        query.andWhere('slot.date >= :startDate', { startDate });
-      }
-
-      return await query.orderBy('slot.date', 'ASC').addOrderBy('slot.startTime', 'ASC').getMany();
-    } catch (error) {
-      console.error('Error fetching available slots:', error);
-      throw new Error('Failed to fetch available slots');
+    if (startDate && endDate) {
+      query.andWhere('slot.date BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    } else if (startDate) {
+      query.andWhere('slot.date >= :startDate', { startDate });
     }
+
+    return await query.orderBy('slot.date', 'ASC').addOrderBy('slot.startTime', 'ASC').getMany();
   }
 
   async getAllSlots(filters?: {
@@ -87,116 +82,91 @@ export class DeliverySlotService {
     startDate?: Date;
     endDate?: Date;
   }): Promise<DeliverySlot[]> {
-    try {
-      const query = this.deliverySlotRepository.createQueryBuilder('slot');
+    const query = this.deliverySlotRepository.createQueryBuilder('slot');
 
-      if (filters?.date) {
-        query.andWhere('slot.date = :date', { date: filters.date });
-      }
-
-      if (filters?.isActive !== undefined) {
-        query.andWhere('slot.isActive = :isActive', { isActive: filters.isActive });
-      }
-
-      if (filters?.startDate && filters?.endDate) {
-        query.andWhere('slot.date BETWEEN :startDate AND :endDate', {
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        });
-      }
-
-      return await query.orderBy('slot.date', 'ASC').addOrderBy('slot.startTime', 'ASC').getMany();
-    } catch (error) {
-      console.error('Error fetching delivery slots:', error);
-      throw new Error('Failed to fetch delivery slots');
+    if (filters?.date) {
+      query.andWhere('slot.date = :date', { date: filters.date });
     }
+
+    if (filters?.isActive !== undefined) {
+      query.andWhere('slot.isActive = :isActive', { isActive: filters.isActive });
+    }
+
+    if (filters?.startDate && filters?.endDate) {
+      query.andWhere('slot.date BETWEEN :startDate AND :endDate', {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
+    }
+
+    return await query.orderBy('slot.date', 'ASC').addOrderBy('slot.startTime', 'ASC').getMany();
   }
 
   async updateSlot(id: string, data: UpdateDeliverySlotDto): Promise<DeliverySlot> {
-    try {
-      const slot = await this.deliverySlotRepository.findOne({
-        where: { id },
-      });
+    const slot = await this.deliverySlotRepository.findOne({
+      where: { id },
+    });
 
-      if (!slot) {
-        throw new Error('Delivery slot not found');
-      }
-
-      Object.assign(slot, data);
-      return await this.deliverySlotRepository.save(slot);
-    } catch (error) {
-      console.error('Error updating delivery slot:', error);
-      throw error;
+    if (!slot) {
+      throw new NotFoundError('Delivery slot not found');
     }
+
+    Object.assign(slot, data);
+    return await this.deliverySlotRepository.save(slot);
   }
 
   async deleteSlot(id: string): Promise<void> {
-    try {
-      const slot = await this.deliverySlotRepository.findOne({
-        where: { id },
-      });
+    const slot = await this.deliverySlotRepository.findOne({
+      where: { id },
+    });
 
-      if (!slot) {
-        throw new Error('Delivery slot not found');
-      }
-
-      if (slot.currentOrders > 0) {
-        throw new Error('Cannot delete delivery slot with existing orders');
-      }
-
-      await this.deliverySlotRepository.remove(slot);
-    } catch (error) {
-      console.error('Error deleting delivery slot:', error);
-      throw error;
+    if (!slot) {
+      throw new NotFoundError('Delivery slot not found');
     }
+
+    if (slot.currentOrders > 0) {
+      throw new ConflictError('Cannot delete delivery slot with existing orders');
+    }
+
+    await this.deliverySlotRepository.remove(slot);
   }
 
   async incrementSlotOrders(id: string): Promise<DeliverySlot> {
-    try {
-      const slot = await this.deliverySlotRepository.findOne({
-        where: { id },
-      });
+    const slot = await this.deliverySlotRepository.findOne({
+      where: { id },
+    });
 
-      if (!slot) {
-        throw new Error('Delivery slot not found');
-      }
-
-      if (!slot.isActive) {
-        throw new Error('Delivery slot is not active');
-      }
-
-      if (slot.currentOrders >= slot.maxOrders) {
-        throw new Error('Delivery slot is full');
-      }
-
-      slot.currentOrders += 1;
-      return await this.deliverySlotRepository.save(slot);
-    } catch (error) {
-      console.error('Error incrementing slot orders:', error);
-      throw error;
+    if (!slot) {
+      throw new NotFoundError('Delivery slot not found');
     }
+
+    if (!slot.isActive) {
+      throw new BadRequestError('Delivery slot is not active');
+    }
+
+    if (slot.currentOrders >= slot.maxOrders) {
+      throw new ConflictError('Delivery slot is full');
+    }
+
+    slot.currentOrders += 1;
+    return await this.deliverySlotRepository.save(slot);
   }
 
   async decrementSlotOrders(id: string): Promise<DeliverySlot> {
-    try {
-      const slot = await this.deliverySlotRepository.findOne({
-        where: { id },
-      });
+    const slot = await this.deliverySlotRepository.findOne({
+      where: { id },
+    });
 
-      if (!slot) {
-        throw new Error('Delivery slot not found');
-      }
-
-      if (slot.currentOrders > 0) {
-        slot.currentOrders -= 1;
-        return await this.deliverySlotRepository.save(slot);
-      }
-
-      return slot;
-    } catch (error) {
-      console.error('Error decrementing slot orders:', error);
-      throw error;
+    if (!slot) {
+      throw new NotFoundError('Delivery slot not found');
     }
+
+    if (slot.currentOrders > 0) {
+      slot.currentOrders -= 1;
+      return await this.deliverySlotRepository.save(slot);
+    }
+
+    return slot;
   }
 }
 
