@@ -1,13 +1,10 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../../shared/schema';
-import { getConfig } from './config/config.service';
-
-const config = getConfig();
 
 const pool = new Pool({
-  connectionString: config.database.url,
-  ssl: config.database.ssl ? { rejectUnauthorized: false } : undefined,
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
