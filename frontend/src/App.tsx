@@ -19,6 +19,7 @@ import { AccountDashboardPage } from './pages/AccountDashboardPage';
 import { OrderHistoryPage } from './pages/OrderHistoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { WishlistPage } from './pages/WishlistPage';
+import { PrivateRoute } from './components/auth/PrivateRoute';
 
 const AppLayout = styled.div`
   display: flex;
@@ -45,14 +46,56 @@ function App() {
                   <Route path="/products" element={<ProductListPage />} />
                   <Route path="/products/:id" element={<ProductDetailPage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/wishlist" element={<WishlistPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
-                  <Route path="/account" element={<AccountDashboardPage />} />
-                  <Route path="/account/orders" element={<OrderHistoryPage />} />
-                  <Route path="/account/profile" element={<ProfilePage />} />
+                  <Route
+                    path="/wishlist"
+                    element={
+                      <PrivateRoute>
+                        <WishlistPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/checkout"
+                    element={
+                      <PrivateRoute>
+                        <CheckoutPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/order-success/:orderId"
+                    element={
+                      <PrivateRoute>
+                        <OrderSuccessPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/account"
+                    element={
+                      <PrivateRoute>
+                        <AccountDashboardPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/account/orders"
+                    element={
+                      <PrivateRoute>
+                        <OrderHistoryPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/account/profile"
+                    element={
+                      <PrivateRoute>
+                        <ProfilePage />
+                      </PrivateRoute>
+                    }
+                  />
                   <Route path="*" element={<div style={{ padding: '2rem', textAlign: 'center' }}><h1>Page Not Found</h1></div>} />
                 </Routes>
               </Main>

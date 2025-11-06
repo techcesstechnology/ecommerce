@@ -95,7 +95,6 @@ const ErrorMessage = styled.div`
 `;
 
 export const CheckoutPage: React.FC = () => {
-  const { isAuthenticated } = useAuth();
   const { cart, clearCart } = useCart();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -113,11 +112,6 @@ export const CheckoutPage: React.FC = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('cash');
-
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
 
   if (!cart || cart.items.length === 0) {
     navigate('/cart');
