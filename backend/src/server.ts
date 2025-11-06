@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
+import path from 'path';
 import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
 import cartRoutes from './routes/cart.routes';
@@ -49,8 +50,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Allow inline scripts for React
         imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"], // Allow API calls to same origin
       },
     },
     hsts: {
@@ -58,6 +60,7 @@ app.use(
       includeSubDomains: true,
       preload: true,
     },
+    crossOriginEmbedderPolicy: false, // Allow loading resources
   })
 );
 
@@ -118,7 +121,7 @@ app.use(morgan(morganFormat, { stream: morganStream }));
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
 
-// Routes
+// API Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
@@ -127,26 +130,39 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
 
-// Root endpoint
-app.get('/', (_req: Request, res: Response) => {
-  res.json({
-    message: 'Welcome to FreshRoute API',
-    version: apiConfig.version,
-    environment: config.getEnvironment(),
-    endpoints: {
-      health: `${apiConfig.prefix}/health`,
-      auth: `${apiConfig.prefix}/auth`,
-      cart: `${apiConfig.prefix}/cart`,
-      products: `${apiConfig.prefix}/products`,
-      reviews: `${apiConfig.prefix}/reviews`,
-      wishlist: `${apiConfig.prefix}/wishlist`,
-      orders: `${apiConfig.prefix}/orders`,
-    },
+// Serve frontend static files in production
+if (config.isProduction()) {
+  const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+  
+  // Serve static files from frontend/dist
+  app.use(express.static(frontendDistPath));
+  
+  // Handle React routing - send all non-API requests to index.html
+  app.get('*', (_req: Request, res: Response) => {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
   });
-});
-
-// 404 handler
-app.use(notFoundHandler);
+} else {
+  // Development - show API info
+  app.get('/', (_req: Request, res: Response) => {
+    res.json({
+      message: 'Welcome to FreshRoute API',
+      version: apiConfig.version,
+      environment: config.getEnvironment(),
+      endpoints: {
+        health: `${apiConfig.prefix}/health`,
+        auth: `${apiConfig.prefix}/auth`,
+        cart: `${apiConfig.prefix}/cart`,
+        products: `${apiConfig.prefix}/products`,
+        reviews: `${apiConfig.prefix}/reviews`,
+        wishlist: `${apiConfig.prefix}/wishlist`,
+        orders: `${apiConfig.prefix}/orders`,
+      },
+    });
+  });
+  
+  // 404 handler for development
+  app.use(notFoundHandler);
+}
 
 // Global error handler - must be last
 app.use(errorHandler);
