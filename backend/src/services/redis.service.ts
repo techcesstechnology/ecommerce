@@ -46,6 +46,13 @@ export class RedisService {
       return;
     }
 
+    // Skip Redis initialization if not configured
+    if (!redisConfig.url && (!process.env.REDIS_HOST && !process.env.REDIS_URL)) {
+      logger.info('⚠️  Redis not configured - caching will be disabled');
+      this.isConnected = false;
+      return;
+    }
+
     try {
       let client: RedisClient;
 

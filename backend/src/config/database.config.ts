@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import path from 'path';
 import { getConfig } from './config.service';
 
@@ -6,7 +6,7 @@ import { getConfig } from './config.service';
 const config = getConfig();
 const dbConfig = config.getDatabaseConfig();
 
-export const dataSourceOptions: DataSourceOptions = {
+export const AppDataSource = new DataSource({
   type: 'postgres',
   host: dbConfig.host,
   port: dbConfig.port,
@@ -31,18 +31,16 @@ export const dataSourceOptions: DataSourceOptions = {
   // Migration table name
   migrationsTableName: 'migrations',
 
-  // Synchronize schema in development only (not recommended for production)
-  synchronize: dbConfig.sync,
+  // IMPORTANT: Set synchronize to false to prevent TypeORM from modifying the schema
+  // The schema is managed by Drizzle, TypeORM just reads the existing tables
+  synchronize: false,
 
   // Logging configuration
   logging: dbConfig.logging ? ['error', 'warn', 'schema'] : ['error'],
 
   // Enable SSL for production databases
   ssl: dbConfig.ssl ? { rejectUnauthorized: false } : false,
-};
-
-// Create and export the data source
-export const AppDataSource = new DataSource(dataSourceOptions);
+});
 
 /**
  * Initialize database connection

@@ -4,10 +4,12 @@ import * as schema from '../../shared/schema';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  // Always use SSL for Neon database (even in development)
+  ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : 
+        process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Increased to 10 seconds for Neon
 });
 
 export const db = drizzle(pool, { schema });
@@ -22,6 +24,10 @@ export async function testDatabaseConnection(): Promise<boolean> {
     console.error('Database connection test failed:', error);
     return false;
   }
+}
+
+export async function checkDatabaseHealth(): Promise<boolean> {
+  return testDatabaseConnection();
 }
 
 export async function closeDatabaseConnection(): Promise<void> {

@@ -38,7 +38,11 @@ The project enforces code quality through strict TypeScript, ESLint with Prettie
 
 ### Database
 
-- **PostgreSQL**: Primary data store, accessed via the `pg` npm package. Drizzle ORM schema is used with foreign key constraints and indexes.
+- **PostgreSQL**: Primary data store (Neon-hosted), accessed via the `pg` npm package. 
+- **Drizzle ORM**: Used for schema definition and migrations (14 tables created)
+- **TypeORM**: Used by backend services for data access (configured to read Drizzle-created tables with `synchronize: false`)
+- All 14 database tables successfully created: users, categories, products, promo_codes, carts, cart_items, wishlists, wishlist_items, delivery_slots, orders, order_items, reviews, review_helpful, audit_logs
+- 21 foreign key constraints and 30+ performance indexes in place
 
 ### Caching Layer
 
