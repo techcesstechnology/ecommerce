@@ -2,109 +2,7 @@
 
 ## Overview
 
-FreshRoute is a comprehensive e-commerce platform specifically designed for the Zimbabwean market. The project uses a monorepo architecture that manages three main applications (backend API, web frontend, and mobile app) along with a shared code library. This structure enables code reuse, consistent typing across platforms, and centralized tooling while maintaining independent deployments for each service.
-
-The platform aims to provide a seamless shopping experience across web and mobile channels, addressing the unique needs of the local market.
-
-## Recent Changes
-
-### November 6, 2025 - Full-Stack Production Deployment Ready
-**Frontend & Backend Integration**:
-- Backend now serves React frontend in production from single deployment
-- Frontend static files automatically built and served from `frontend/dist`
-- All routes (except `/api/*`) serve the React SPA with proper routing support
-- Single deployment URL serves both frontend and backend APIs
-
-**Port Configuration Fixed**:
-- Backend uses `PORT` environment variable (production standard) with fallback to `BACKEND_PORT` (dev)
-- Production: Replit sets `PORT=5000` → backend uses it
-- Development: `BACKEND_PORT=3000` via npm script
-- Backend binds to `0.0.0.0` for Replit compatibility
-
-**Database Configuration Enhanced**:
-- Backend automatically parses `DATABASE_URL` (Replit standard)
-- Falls back to individual DB variables if DATABASE_URL unavailable
-- SSL enabled by default with DATABASE_URL
-- Seamless integration with Replit PostgreSQL
-
-**Redis Caching Support**:
-- Cloud Redis via `REDIS_URL` environment variable
-- Supports both localhost and cloud providers (Upstash)
-- See `REDIS_SETUP.md` for setup guide
-- Graceful degradation if Redis unavailable
-
-**Build Configuration**:
-- Fixed TypeScript build issues in frontend and shared packages
-- Frontend build: Removed tsc check (Vite handles type checking)
-- Shared package: Excluded mobile/frontend/backend from TypeScript compilation
-- Production build: Shared → Frontend → Backend sequence
-
-**Production Deployment Status**:
-- ✅ Full-stack deployment (frontend + backend in one)
-- ✅ Port: Auto-uses PORT=5000 in production
-- ✅ Database: Auto-connects via DATABASE_URL
-- ✅ Frontend: Builds and serves correctly
-- ✅ API: All endpoints working
-- ✅ Redis: Optional caching support
-- ✅ Security: CSP headers updated for React
-- ✅ All deployment blockers resolved
-
-### November 6, 2025 - Admin Dashboard Implementation (In Progress)
-**Admin Backend & Services**:
-- All admin APIs are implemented and documented in PRODUCT_MANAGEMENT_GUIDE.md
-- Services for dashboard stats, analytics, products, orders, categories, and admin
-
-**Admin Frontend Components**:
-- Created AdminLayout with responsive sidebar navigation
-- Built 6 admin pages: Dashboard, Products, Orders, Categories, Analytics, Settings
-- Added AdminRoute component for admin-only access (checks user.role === 'admin')
-- Integrated admin routes in App.tsx under /admin/*
-
-**Known Issues (Being Fixed)**:
-- Minor TypeScript type mismatches in admin pages (Product.stockQuantity vs stock, Order.total vs totalAmount, etc.)
-- Need to align frontend types with actual backend API responses
-- Loading component usage needs adjustment
-
-**Next Steps**:
-- Fix type alignments between frontend and backend
-- Test admin dashboard with actual backend APIs
-- Verify admin authentication and authorization
-
-### November 6, 2025 - Complete Customer-Facing Frontend Implementation
-- Built complete authentication flow (Login, Register pages) with form validation and error handling
-- Implemented secure checkout flow with shipping address form (Zimbabwe provinces), payment method selection (Cash, EcoCash, Card)
-- Created Order Success page with order confirmation and details display
-- Built complete account management section:
-  - Account Dashboard with order statistics and quick links
-  - Order History page with status badges and order details
-  - Profile Management for updating personal info and changing password
-  - Wishlist page with add-to-cart and bulk operations
-- **Security**: Implemented PrivateRoute component to protect authenticated routes, preventing unauthorized access and premature API calls
-- All protected routes (wishlist, checkout, order-success, account pages) now require authentication
-- Frontend successfully integrates with all backend APIs (products, cart, orders, reviews, wishlist, auth)
-- Mobile-first responsive design with Zimbabwe-inspired green (#00A859) brand color
-- ZWL currency formatting and 15% tax calculations throughout
-
-**Complete Page Inventory**:
-- Public: HomePage, ProductListPage, ProductDetailPage, CartPage, LoginPage, RegisterPage
-- Protected: WishlistPage, CheckoutPage, OrderSuccessPage, AccountDashboardPage, OrderHistoryPage, ProfilePage
-
-### November 4, 2025 - Replit Environment Setup & Deployment Configuration
-- Configured backend to use flexible port configuration: PORT (production) or BACKEND_PORT (dev) with default to 5000
-- Backend binds to 0.0.0.0 for Replit compatibility (not localhost)
-- Configured frontend to run on port 5000 with 0.0.0.0 host and allowedHosts for Replit proxy
-- Updated CORS configuration to automatically include Replit domain (REPLIT_DEV_DOMAIN) for seamless development and production deployment
-- Created missing `frontend/tsconfig.node.json` for proper Vite TypeScript configuration
-- Set up unified development workflow running both backend (port 3000) and frontend (port 5000) via concurrently
-- Configured autoscale deployment to only build and run backend service on port 5000
-- Frontend should be deployed separately as a Static Deployment
-- All services verified and running without errors
-
-**Deployment Configuration**:
-- **Development**: Backend on port 3000 (via BACKEND_PORT), Frontend on port 5000
-- **Production (Autoscale)**: Backend only on port 5000 (via PORT env variable)
-- **Frontend Production**: Deploy separately as Static Deployment
-- **Environment Variables**: PORT (production port), BACKEND_PORT (dev port), CORS_ORIGIN (optional override)
+FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean market, offering a seamless shopping experience across web and mobile channels. It utilizes a monorepo architecture managing a backend API, a web frontend, a mobile app, and a shared code library. This structure promotes code reuse, consistent typing, and centralized tooling while allowing independent deployments. The platform integrates Zimbabwe-specific features like local payment methods (EcoCash), currency (ZWL), and tax calculations, aiming to address the unique needs of the local market. It includes a complete customer-facing experience with authentication, secure checkout, account management, and an in-progress admin dashboard.
 
 ## User Preferences
 
@@ -114,161 +12,61 @@ Preferred communication style: Simple, everyday language.
 
 ### Monorepo Structure
 
-The project uses npm workspaces to manage four interconnected packages:
-
-1. **Backend** (`@freshroute/backend`) - RESTful API server
-2. **Frontend** (`@freshroute/frontend`) - Web application
-3. **Mobile** (`@freshroute/mobile`) - Native mobile app
-4. **Shared** (`@freshroute/shared`) - Common code, types, and utilities
-
-This architecture was chosen to:
-- Enable type sharing across all platforms, reducing duplication and ensuring consistency
-- Centralize common business logic and validation rules
-- Simplify dependency management and versioning
-- Facilitate coordinated releases across services
-
-**Tradeoff**: Monorepos can become complex to manage at scale, but for this project size, the benefits of code sharing and simplified development workflow outweigh the complexity.
+The project uses npm workspaces to manage four packages: Backend, Frontend, Mobile, and Shared. This enables type sharing, common business logic centralization, simplified dependency management, and coordinated releases across services.
 
 ### Backend Architecture
 
-**Technology**: Node.js with Express.js and TypeScript
-
-The backend follows a traditional RESTful API server pattern with:
-- Express.js middleware stack for request processing
-- Route-based organization for API endpoints
-- Separation of concerns (routes, controllers pattern ready)
-- Environment-based configuration using dotenv
-
-**Key Design Decisions**:
-- **TypeScript**: Chosen for type safety and better developer experience, catching errors at compile time
-- **Express.js**: Selected for its maturity, extensive middleware ecosystem, and simplicity
-- **Middleware Stack**: Layered security (Helmet), compression, CORS, and logging (Morgan) to handle cross-cutting concerns
-
-**CORS Configuration**: Dynamic origin handling supports both local development (localhost) and Replit environments, with environment variable customization for production deployments.
+Built with Node.js, Express.js, and TypeScript, the backend follows a RESTful API pattern. It uses Express.js middleware for request processing, route-based API organization, and separation of concerns. Key decisions include TypeScript for type safety, Express.js for its maturity, and a middleware stack for security (Helmet), compression, CORS, and logging (Morgan). CORS is dynamically configured to support local development and Replit environments.
 
 ### Frontend Architecture
 
-**Technology**: React 18 with Vite and TypeScript
-
-The web application uses a modern React setup with:
-- **Vite**: Fast development server with HMR (Hot Module Replacement)
-- **React Router**: Client-side routing (dependency present)
-- **Styled Components**: CSS-in-JS for component styling
-- **Axios**: HTTP client for API communication
-
-**Key Design Decisions**:
-- **Vite over Create React App**: Significantly faster build times and development server, better tree-shaking, and native ESM support
-- **Styled Components**: Enables component-scoped styling, dynamic theming, and better TypeScript integration compared to traditional CSS
-- **React 18**: Latest stable version provides improved performance through concurrent rendering features
-
-**Alternative Considered**: Next.js was likely considered but not chosen, possibly to keep the frontend as a pure SPA without SSR complexity for initial MVP.
-
-**Authentication & Route Protection**:
-- Custom PrivateRoute component wraps protected routes
-- Checks authentication state before rendering protected content
-- Automatically redirects unauthenticated users to login page
-- Prevents premature API calls and provides smooth user experience with loading states
-
-**Page Structure**:
-The frontend is organized into clear page categories:
-- **Public Pages**: Homepage, Product Listing, Product Detail, Shopping Cart, Login, Register
-- **Protected Pages**: Wishlist, Checkout, Order Success, Account Dashboard, Order History, Profile Management
-- All pages follow consistent Zimbabwe-inspired design with green (#00A859) primary color
-- Mobile-first responsive design with tablet and desktop breakpoints
+The web application uses React 18 with Vite and TypeScript. It features Vite for fast development, React Router for client-side routing, Styled Components for styling, and Axios for API communication. Vite was chosen over Create React App for faster builds. It implements a mobile-first responsive design with a Zimbabwe-inspired green color scheme. Authentication and route protection are handled via a custom `PrivateRoute` component.
 
 ### Mobile Architecture
 
-**Technology**: React Native with Expo
-
-The mobile app uses:
-- **Expo Framework**: Managed workflow for simplified development and deployment
-- **React Navigation**: Navigation library for screen management
-- **Axios**: Consistent API client with web frontend
-
-**Key Design Decisions**:
-- **Expo Managed Workflow**: Chosen for faster development cycles, easier setup, and built-in tooling. Enables immediate testing without native build configuration.
-- **React Native**: Allows code sharing with web frontend (React knowledge transfer) and shared business logic
-- **Navigation Stack**: Ready for multi-screen application structure
-
-**Tradeoff**: Expo's managed workflow limits access to native modules but dramatically simplifies the development and deployment process. Can eject to bare workflow if native features are needed later.
+The mobile app is developed with React Native and Expo, utilizing Expo's managed workflow for simplified development and deployment, and React Navigation for screen management. Axios is used for consistent API communication. Expo's managed workflow was chosen for faster development cycles, with the option to eject to a bare workflow if native modules are required.
 
 ### Shared Library Architecture
 
-**Purpose**: Centralize common code across all applications
-
-Contains:
-- **Types** (`src/types`): Shared TypeScript interfaces (User model, etc.)
-- **Constants** (`src/constants`): Application-wide constants
-- **Utils** (`src/utils`): Common utility functions (e.g., currency formatting for Zimbabwe)
-- **Validators** (`src/validators`): Shared validation logic (e.g., email validation)
-
-**Key Design Decisions**:
-- **CommonJS Output**: The shared library compiles to CommonJS for maximum compatibility with Node.js backend
-- **Declaration Files**: TypeScript declaration files are generated for full type support in consuming packages
-- **Source Maps**: Enabled for better debugging experience across packages
+This package centralizes common code, including TypeScript types, application-wide constants, utility functions (e.g., currency formatting), and shared validation logic, ensuring consistency across all applications. It compiles to CommonJS with declaration files and source maps.
 
 ### Code Quality & Development Workflow
 
-**Tooling**:
-- **TypeScript**: Strict mode enabled across all packages for maximum type safety
-- **ESLint**: Code linting with TypeScript-specific rules and Prettier integration
-- **Prettier**: Consistent code formatting (single quotes, 100 char line length, 2-space indentation)
-- **Husky + Lint-staged**: Pre-commit hooks ensure code quality before commits
-
-**Rationale**: This tooling stack prevents common errors, enforces consistent style, and reduces code review friction. The strict TypeScript configuration catches potential bugs early in development.
+The project enforces code quality through strict TypeScript, ESLint with Prettier integration, and Husky + Lint-staged for pre-commit hooks, ensuring consistent style and early error detection.
 
 ## External Dependencies
 
 ### Database
 
-**PostgreSQL** (`pg` client in backend dependencies)
-- Primary data store for the application
-- Accessed via the `pg` npm package
-- No ORM layer currently implemented (raw SQL or query builder expected)
+- **PostgreSQL**: Primary data store, accessed via the `pg` npm package. Drizzle ORM schema is used with foreign key constraints and indexes.
 
 ### Caching Layer
 
-**Redis** (`redis` client in backend dependencies)
-- Used for application-level caching
-- Improves performance for frequently accessed data
-- Can also support session storage and rate limiting
-
-**Note**: Both PostgreSQL and Redis connections are not yet configured in the codebase but are present as dependencies.
+- **Redis**: Used for application-level caching, session storage, and rate limiting.
 
 ### Frontend Build & Development
 
-- **Vite**: Modern build tool and dev server
-- **Babel**: JavaScript transpilation (for mobile via Expo)
+- **Vite**: Modern build tool and development server for the frontend.
+- **Babel**: JavaScript transpilation (for mobile via Expo).
 
 ### Mobile Development
 
-- **Expo**: Development platform providing:
-  - Build services
-  - Over-the-air updates
-  - Development client
-  - Access to native APIs
+- **Expo**: Framework providing build services, over-the-air updates, a development client, and access to native APIs for the mobile app.
 
 ### HTTP & API Communication
 
-- **Axios**: HTTP client used in both frontend and mobile apps for API requests
-- Enables consistent request/response handling and interceptors across platforms
+- **Axios**: HTTP client used consistently across both frontend and mobile applications for API requests.
 
 ### Security & Middleware
 
-- **Helmet**: Sets secure HTTP headers for Express.js
-- **CORS**: Configurable cross-origin resource sharing
-- **Compression**: Response compression middleware for bandwidth optimization
-- **Morgan**: HTTP request logging for debugging and monitoring
+- **Helmet**: Sets secure HTTP headers for Express.js.
+- **CORS**: Configurable Cross-Origin Resource Sharing.
+- **Compression**: Response compression middleware.
+- **Morgan**: HTTP request logging.
 
 ### Development Tools
 
-- **Concurrently**: Runs multiple npm scripts simultaneously (backend + frontend dev servers)
-- **ts-node-dev**: TypeScript execution with auto-restart for backend development
-- **Jest**: Testing framework (configured but tests not yet implemented)
-
-### Environment Variables
-
-The application uses **dotenv** for environment configuration management, with a centralized `.env` file at the root level referenced by the backend service. This allows for:
-- Separate configuration for development, staging, and production
-- Secure handling of sensitive credentials
-- Easy Replit deployment integration via `REPLIT_DEV_DOMAIN` detection
+- **Concurrently**: Runs multiple npm scripts simultaneously.
+- **ts-node-dev**: TypeScript execution with auto-restart for backend development.
+- **Jest**: Testing framework (configured).
+- **dotenv**: Manages environment variables for configuration.
