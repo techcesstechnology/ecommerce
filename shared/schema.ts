@@ -51,14 +51,14 @@ export const users = pgTable(
 // ============================================================================
 // CATEGORIES TABLE
 // ============================================================================
-export const categories = pgTable(
+export const categories: any = pgTable(
   'categories',
   {
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
     slug: varchar('slug', { length: 255 }).notNull().unique(),
     description: text('description'),
-    parentId: integer('parent_id').references(() => categories.id, { onDelete: 'set null' }),
+    parentId: integer('parent_id').references((): any => categories.id, { onDelete: 'set null' }),
     imageUrl: varchar('image_url', { length: 500 }),
     isActive: boolean('is_active').notNull().default(true),
     displayOrder: integer('display_order').notNull().default(0),
