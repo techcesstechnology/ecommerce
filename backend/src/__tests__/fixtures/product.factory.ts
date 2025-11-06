@@ -12,7 +12,6 @@ export interface ProductFactoryOptions {
   price?: number;
   stockQuantity?: number;
   categoryId?: string;
-  vendorId?: string;
   images?: string[];
   isActive?: boolean;
   featured?: boolean;
