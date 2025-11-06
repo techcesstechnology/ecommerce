@@ -9,6 +9,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
+import cartRoutes from './routes/cart.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
@@ -116,6 +117,7 @@ app.use('/api', apiLimiter);
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -126,6 +128,7 @@ app.get('/', (_req: Request, res: Response) => {
     endpoints: {
       health: `${apiConfig.prefix}/health`,
       auth: `${apiConfig.prefix}/auth`,
+      cart: `${apiConfig.prefix}/cart`,
     },
   });
 });
