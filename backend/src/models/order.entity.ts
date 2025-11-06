@@ -80,6 +80,24 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  deliverySlotId?: string;
+
+  @Column({ type: 'date', nullable: true })
+  deliveryDate?: Date;
+
+  @Column({ type: 'time', nullable: true })
+  deliveryTimeStart?: string;
+
+  @Column({ type: 'time', nullable: true })
+  deliveryTimeEnd?: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discount: number;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  promoCode?: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   @Index()
   createdAt: Date;

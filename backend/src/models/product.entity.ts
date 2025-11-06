@@ -66,6 +66,21 @@ export class Product {
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, unknown>;
 
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
+  averageRating: number;
+
+  @Column({ type: 'integer', default: 0 })
+  reviewCount: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  salePrice?: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  saleStartDate?: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  saleEndDate?: Date;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

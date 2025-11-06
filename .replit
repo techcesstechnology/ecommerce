@@ -1,4 +1,4 @@
-modules = ["nodejs-18", "web"]
+modules = ["nodejs-18", "web", "postgresql-16"]
 
 [nix]
 channel = "stable-25_05"
@@ -41,10 +41,6 @@ externalPort = 80
 [[ports]]
 localPort = 5001
 externalPort = 3002
-
-[[ports]]
-localPort = 41073
-externalPort = 3003
 
 [[ports]]
 localPort = 42817
