@@ -144,10 +144,6 @@ export const Header: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   return (
     <HeaderContainer>
       <TopBar>

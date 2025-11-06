@@ -132,7 +132,7 @@ const RemoveButton = styled.button`
   text-decoration: underline;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.errorDark};
+    opacity: 0.8;
   }
 `;
 

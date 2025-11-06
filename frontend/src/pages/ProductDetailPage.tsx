@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Product, Review, RatingSummary } from '../types';
+import { Product, Review } from '../types';
 import { productService } from '../services/productService';
 import { reviewService } from '../services/reviewService';
 import { useCart } from '../contexts/CartContext';
