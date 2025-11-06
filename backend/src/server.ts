@@ -15,6 +15,7 @@ import productRoutes from './routes/product.routes';
 import reviewRoutes from './routes/review.routes';
 import wishlistRoutes from './routes/wishlist.routes';
 import orderRoutes from './routes/order.routes';
+import adminRoutes from './routes/admin.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
@@ -129,6 +130,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve frontend static files in production
 if (config.isProduction()) {
@@ -156,6 +158,7 @@ if (config.isProduction()) {
         reviews: `${apiConfig.prefix}/reviews`,
         wishlist: `${apiConfig.prefix}/wishlist`,
         orders: `${apiConfig.prefix}/orders`,
+        admin: `${apiConfig.prefix}/admin`,
       },
     });
   });
