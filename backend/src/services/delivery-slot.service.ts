@@ -2,7 +2,6 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { DeliverySlot } from '../models/delivery-slot.entity';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
-import { logger } from '../services/logger.service';
 
 export interface CreateDeliverySlotDto {
   date: Date;

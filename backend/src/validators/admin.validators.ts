@@ -1,4 +1,4 @@
-import { body, param, query } from 'express-validator';
+import { body, param } from 'express-validator';
 
 export const createProductValidation = [
   body('name').trim().notEmpty().withMessage('Product name is required'),

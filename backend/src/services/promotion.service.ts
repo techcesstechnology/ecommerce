@@ -2,7 +2,6 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { Promotion, PromotionType } from '../models/promotion.entity';
 import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
-import { logger } from '../services/logger.service';
 
 export interface CreatePromotionDto {
   code: string;
