@@ -236,7 +236,10 @@ class ConfigService {
    * Build Redis configuration
    */
   private buildRedisConfig(): RedisConfig {
+    const redisUrl = getOptionalEnv(ENV_KEYS.REDIS_URL, '');
+    
     return {
+      url: redisUrl || undefined,
       host: getOptionalEnv(ENV_KEYS.REDIS_HOST, 'localhost'),
       port: parseInteger(process.env[ENV_KEYS.REDIS_PORT], 6379),
       password: getOptionalEnv(ENV_KEYS.REDIS_PASSWORD, ''),

@@ -8,6 +8,21 @@ The platform aims to provide a seamless shopping experience across web and mobil
 
 ## Recent Changes
 
+### November 6, 2025 - Redis Caching Support for Production
+- Added cloud Redis support via `REDIS_URL` environment variable
+- Backend now supports both traditional host/port Redis (localhost) and URL-based Redis (cloud providers)
+- Updated RedisConfig interface to include optional `url` field
+- Updated Redis service to automatically detect and use REDIS_URL when available
+- Created comprehensive setup guide (`REDIS_SETUP.md`) for enabling free Upstash Redis caching
+- Application continues to work perfectly without Redis (graceful degradation)
+- When `REDIS_URL` is set, caching is automatically enabled for production deployment
+
+**Redis Configuration**:
+- **Development**: Optional localhost Redis (currently not running, app continues without it)
+- **Production**: Set `REDIS_URL` secret in Replit to enable cloud Redis (recommended: Upstash free tier)
+- **Cache TTL**: 1 hour default for products, categories, and sessions
+- **Graceful Fallback**: App automatically continues without caching if Redis is unavailable
+
 ### November 6, 2025 - Complete Customer-Facing Frontend Implementation
 - Built complete authentication flow (Login, Register pages) with form validation and error handling
 - Implemented secure checkout flow with shipping address form (Zimbabwe provinces), payment method selection (Cash, EcoCash, Card)

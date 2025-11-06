@@ -83,6 +83,7 @@ export interface CORSConfig {
  * Redis configuration interface
  */
 export interface RedisConfig {
+  url?: string;
   host: string;
   port: number;
   password: string;
@@ -277,6 +278,7 @@ export const ENV_KEYS = {
   CORS_ORIGIN: 'CORS_ORIGIN',
 
   // Redis
+  REDIS_URL: 'REDIS_URL',
   REDIS_HOST: 'REDIS_HOST',
   REDIS_PORT: 'REDIS_PORT',
   REDIS_PASSWORD: 'REDIS_PASSWORD',

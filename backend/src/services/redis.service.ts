@@ -47,29 +47,42 @@ export class RedisService {
     }
 
     try {
-      const options: RedisClientOptions = {
-        socket: {
-          host: redisConfig.host,
-          port: redisConfig.port,
-          reconnectStrategy: (retries: number) => {
-            if (retries > this.maxReconnectAttempts) {
-              logger.error(`Redis connection failed after ${retries} attempts`);
-              return new Error('Max reconnection attempts reached');
-            }
-            const delay = Math.min(retries * this.reconnectDelay, 30000); // Max 30 seconds
-            logger.warn(`Redis reconnecting in ${delay}ms... (attempt ${retries})`);
-            return delay;
+      let client: RedisClient;
+
+      // If REDIS_URL is provided, use it (for cloud providers like Upstash, Redis Cloud, etc.)
+      if (redisConfig.url) {
+        logger.info('Connecting to Redis using URL (cloud Redis)');
+        const options: RedisClientOptions = {
+          url: redisConfig.url,
+        };
+        client = createClient(options);
+      } else {
+        // Traditional host/port connection (for local Redis or self-hosted)
+        logger.info(`Connecting to Redis using host/port: ${redisConfig.host}:${redisConfig.port}`);
+        const options: RedisClientOptions = {
+          socket: {
+            host: redisConfig.host,
+            port: redisConfig.port,
+            reconnectStrategy: (retries: number) => {
+              if (retries > this.maxReconnectAttempts) {
+                logger.error(`Redis connection failed after ${retries} attempts`);
+                return new Error('Max reconnection attempts reached');
+              }
+              const delay = Math.min(retries * this.reconnectDelay, 30000); // Max 30 seconds
+              logger.warn(`Redis reconnecting in ${delay}ms... (attempt ${retries})`);
+              return delay;
+            },
           },
-        },
-        database: redisConfig.db,
-      };
+          database: redisConfig.db,
+        };
 
-      // Add password if provided
-      if (redisConfig.password) {
-        options.password = redisConfig.password;
+        // Add password if provided
+        if (redisConfig.password) {
+          options.password = redisConfig.password;
+        }
+
+        client = createClient(options);
       }
-
-      const client = createClient(options);
       this.client = client;
 
       // Event handlers
