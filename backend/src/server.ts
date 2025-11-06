@@ -10,6 +10,7 @@ import hpp from 'hpp';
 import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
 import cartRoutes from './routes/cart.routes';
+import productRoutes from './routes/product.routes';
 import { initializeDatabase, closeDatabase } from './config/database.config';
 import { apiLimiter } from './middleware/rate-limit.middleware';
 import { sanitizeInput, preventNoSQLInjection } from './middleware/sanitization.middleware';
@@ -118,6 +119,7 @@ app.use('/api', apiLimiter);
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/products', productRoutes);
 
 // Root endpoint
 app.get('/', (_req: Request, res: Response) => {
@@ -129,6 +131,7 @@ app.get('/', (_req: Request, res: Response) => {
       health: `${apiConfig.prefix}/health`,
       auth: `${apiConfig.prefix}/auth`,
       cart: `${apiConfig.prefix}/cart`,
+      products: `${apiConfig.prefix}/products`,
     },
   });
 });

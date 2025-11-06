@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database.config';
 import { Product } from '../models/product.entity';
+import { Category } from '../models/category.entity';
 
 export interface CreateProductDto {
   name: string;
@@ -43,15 +44,19 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  onSale?: boolean;
+  sortBy?: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'newest' | 'rating';
   page?: number;
   limit?: number;
 }
 
 export class ProductService {
   private productRepository: Repository<Product>;
+  private categoryRepository: Repository<Category>;
 
   constructor() {
     this.productRepository = AppDataSource.getRepository(Product);
+    this.categoryRepository = AppDataSource.getRepository(Category);
   }
 
   /**
@@ -137,6 +142,15 @@ export class ProductService {
         query.andWhere('product.stockQuantity > 0');
       }
 
+      if (filters.onSale) {
+        query.andWhere('product.salePrice IS NOT NULL');
+        query.andWhere('product.saleStartDate <= :now', { now: new Date() });
+        query.andWhere(
+          '(product.saleEndDate IS NULL OR product.saleEndDate >= :now)',
+          { now: new Date() }
+        );
+      }
+
       // Pagination
       const page = filters.page || 1;
       const limit = filters.limit || 20;
@@ -144,8 +158,30 @@ export class ProductService {
 
       query.skip(skip).take(limit);
 
-      // Order by featured first, then by created date
-      query.orderBy('product.isFeatured', 'DESC').addOrderBy('product.createdAt', 'DESC');
+      // Sorting
+      const sortBy = filters.sortBy || 'newest';
+      switch (sortBy) {
+        case 'price_asc':
+          query.orderBy('product.price', 'ASC');
+          break;
+        case 'price_desc':
+          query.orderBy('product.price', 'DESC');
+          break;
+        case 'name_asc':
+          query.orderBy('product.name', 'ASC');
+          break;
+        case 'name_desc':
+          query.orderBy('product.name', 'DESC');
+          break;
+        case 'rating':
+          query.orderBy('product.averageRating', 'DESC');
+          query.addOrderBy('product.reviewCount', 'DESC');
+          break;
+        case 'newest':
+        default:
+          query.orderBy('product.createdAt', 'DESC');
+          break;
+      }
 
       const [products, total] = await query.getManyAndCount();
 
@@ -220,6 +256,85 @@ export class ProductService {
     } catch (error) {
       console.error('Error fetching low stock products:', error);
       throw new Error('Failed to fetch low stock products');
+    }
+  }
+
+  async getFeaturedProducts(limit: number = 10): Promise<Product[]> {
+    try {
+      return await this.productRepository.find({
+        where: { isActive: true, isFeatured: true },
+        relations: ['category'],
+        order: { createdAt: 'DESC' },
+        take: limit,
+      });
+    } catch (error) {
+      console.error('Error fetching featured products:', error);
+      throw new Error('Failed to fetch featured products');
+    }
+  }
+
+  async getOnSaleProducts(page: number = 1, limit: number = 20): Promise<{ products: Product[]; total: number }> {
+    return this.getProducts({ onSale: true, page, limit });
+  }
+
+  async getRelatedProducts(productId: string, limit: number = 4): Promise<Product[] | null> {
+    try {
+      const product = await this.productRepository.findOne({
+        where: { id: productId },
+        relations: ['category'],
+      });
+
+      if (!product) {
+        return null;
+      }
+
+      const relatedProducts = await this.productRepository.find({
+        where: {
+          categoryId: product.categoryId,
+          isActive: true,
+        },
+        order: { createdAt: 'DESC' },
+        take: limit + 1,
+      });
+
+      return relatedProducts.filter((p) => p.id !== productId).slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      throw new Error('Failed to fetch related products');
+    }
+  }
+
+  async getCategories(): Promise<Category[]> {
+    try {
+      return await this.categoryRepository.find({
+        where: { isActive: true },
+        order: { sortOrder: 'ASC', name: 'ASC' },
+      });
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw new Error('Failed to fetch categories');
+    }
+  }
+
+  async getCategoryById(id: string): Promise<Category | null> {
+    try {
+      return await this.categoryRepository.findOne({
+        where: { id, isActive: true },
+      });
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      throw new Error('Failed to fetch category');
+    }
+  }
+
+  async getCategoryBySlug(slug: string): Promise<Category | null> {
+    try {
+      return await this.categoryRepository.findOne({
+        where: { slug, isActive: true },
+      });
+    } catch (error) {
+      console.error('Error fetching category by slug:', error);
+      throw new Error('Failed to fetch category by slug');
     }
   }
 }
