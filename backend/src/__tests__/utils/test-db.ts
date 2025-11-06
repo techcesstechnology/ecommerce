@@ -5,11 +5,6 @@
 
 import { DataSource } from 'typeorm';
 import { AppDataSource } from '../../config/database.config';
-import { User } from '../../models/user.entity';
-import { Product } from '../../models/product.entity';
-import { Order } from '../../models/order.entity';
-import { Category } from '../../models/category.entity';
-import { AuditLog } from '../../models/audit-log.entity';
 
 let testDataSource: DataSource | null = null;
 

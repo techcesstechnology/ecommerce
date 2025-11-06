@@ -320,7 +320,7 @@ export class OrderService {
 
     const orderItems: OrderItem[] = cart.items.map((item) => ({
       productId: item.productId,
-      name: item.product.name,
+      productName: item.product.name,
       sku: item.product.sku,
       price: Number(item.price),
       quantity: item.quantity,

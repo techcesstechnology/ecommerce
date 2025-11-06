@@ -28,10 +28,9 @@ export function buildProduct(options: ProductFactoryOptions = {}): Partial<Produ
     price: options.price || Math.floor(Math.random() * 10000) / 100,
     stockQuantity: options.stockQuantity !== undefined ? options.stockQuantity : Math.floor(Math.random() * 100),
     categoryId: options.categoryId,
-    vendorId: options.vendorId,
     images: options.images || [],
     isActive: options.isActive !== undefined ? options.isActive : true,
-    featured: options.featured || false,
+    isFeatured: options.featured || false,
   };
 }
 
