@@ -145,6 +145,34 @@ class ConfigService {
    * Build database configuration
    */
   private buildDatabaseConfig(env: Environment): DatabaseConfig {
+    // Check if DATABASE_URL is available (Replit/production standard)
+    const databaseUrl = getOptionalEnv(ENV_KEYS.DATABASE_URL, '');
+    
+    if (databaseUrl) {
+      // Parse DATABASE_URL (format: postgresql://user:password@host:port/database)
+      try {
+        const url = new URL(databaseUrl);
+        return {
+          host: url.hostname,
+          port: parseInt(url.port) || 5432,
+          name: url.pathname.slice(1), // Remove leading slash
+          user: url.username,
+          password: url.password,
+          sync: parseBoolean(process.env[ENV_KEYS.DB_SYNC], env === Environment.DEVELOPMENT),
+          logging: parseBoolean(process.env[ENV_KEYS.DB_LOGGING], env === Environment.DEVELOPMENT),
+          ssl: parseBoolean(process.env[ENV_KEYS.DB_SSL], true), // Default to true for DATABASE_URL
+          poolMin: parseInteger(process.env[ENV_KEYS.DB_POOL_MIN], 2),
+          poolMax: parseInteger(process.env[ENV_KEYS.DB_POOL_MAX], 10),
+          connectionTimeout: 2000,
+          idleTimeout: 30000,
+        };
+      } catch (error) {
+        console.error('Failed to parse DATABASE_URL:', error);
+        throw new Error('Invalid DATABASE_URL format');
+      }
+    }
+
+    // Fall back to individual environment variables
     return {
       host: getRequiredEnv(ENV_KEYS.DB_HOST),
       port: parseInteger(process.env[ENV_KEYS.DB_PORT], 5432),
@@ -179,9 +207,15 @@ class ConfigService {
    * Build API configuration
    */
   private buildAPIConfig(): APIConfig {
+    // Check PORT first (production standard), then BACKEND_PORT (development), default to 5000
+    const port = parseInteger(
+      process.env[ENV_KEYS.PORT] || process.env[ENV_KEYS.BACKEND_PORT],
+      5000
+    );
+
     return {
-      port: parseInteger(process.env[ENV_KEYS.BACKEND_PORT], 5000),
-      host: getOptionalEnv(ENV_KEYS.BACKEND_HOST, 'localhost'),
+      port,
+      host: getOptionalEnv(ENV_KEYS.BACKEND_HOST, '0.0.0.0'),
       prefix: getOptionalEnv(ENV_KEYS.API_PREFIX, '/api'),
       version: getOptionalEnv(ENV_KEYS.API_VERSION, 'v1'),
       bodyLimit: '10kb',

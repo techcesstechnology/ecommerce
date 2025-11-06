@@ -20,6 +20,7 @@ export const loginLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   skipSuccessfulRequests: false,
+  validate: { trustProxy: false }, // Skip trust proxy validation (we're intentionally behind a proxy)
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Too Many Requests',
@@ -42,6 +43,7 @@ export const registerLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
+  validate: { trustProxy: false }, // Skip trust proxy validation (we're intentionally behind a proxy)
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Too Many Requests',
@@ -64,6 +66,7 @@ export const passwordResetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  validate: { trustProxy: false }, // Skip trust proxy validation (we're intentionally behind a proxy)
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Too Many Requests',
@@ -85,6 +88,7 @@ export const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Skip trust proxy validation (we're intentionally behind a proxy)
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Too Many Requests',
