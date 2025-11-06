@@ -11,6 +11,14 @@ import { HomePage } from './pages/HomePage';
 import { ProductListPage } from './pages/ProductListPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { CheckoutPage } from './pages/CheckoutPage';
+import { OrderSuccessPage } from './pages/OrderSuccessPage';
+import { AccountDashboardPage } from './pages/AccountDashboardPage';
+import { OrderHistoryPage } from './pages/OrderHistoryPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { WishlistPage } from './pages/WishlistPage';
 
 const AppLayout = styled.div`
   display: flex;
@@ -37,10 +45,14 @@ function App() {
                   <Route path="/products" element={<ProductListPage />} />
                   <Route path="/products/:id" element={<ProductDetailPage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/wishlist" element={<div style={{ padding: '2rem' }}><h1>Wishlist (Coming Soon)</h1></div>} />
-                  <Route path="/account" element={<div style={{ padding: '2rem' }}><h1>Account (Coming Soon)</h1></div>} />
-                  <Route path="/login" element={<div style={{ padding: '2rem' }}><h1>Login (Coming Soon)</h1></div>} />
-                  <Route path="/checkout" element={<div style={{ padding: '2rem' }}><h1>Checkout (Coming Soon)</h1></div>} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/order-success/:orderId" element={<OrderSuccessPage />} />
+                  <Route path="/account" element={<AccountDashboardPage />} />
+                  <Route path="/account/orders" element={<OrderHistoryPage />} />
+                  <Route path="/account/profile" element={<ProfilePage />} />
                   <Route path="*" element={<div style={{ padding: '2rem', textAlign: 'center' }}><h1>Page Not Found</h1></div>} />
                 </Routes>
               </Main>
