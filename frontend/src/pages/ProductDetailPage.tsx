@@ -211,10 +211,15 @@ export const ProductDetailPage: React.FC = () => {
           const inWishlist = await wishlistService.isInWishlist(id);
           setIsInWishlist(inWishlist);
           
-          const hasReviewed = reviewsData.reviews.some(
-            (review: Review) => review.user?.id === Number(user.userId)
-          );
-          setUserHasReviewed(hasReviewed);
+          try {
+            const userReviews = await reviewService.getUserReviews();
+            const hasReviewedThisProduct = userReviews.some(
+              (review: Review) => Number(review.productId) === Number(id)
+            );
+            setUserHasReviewed(hasReviewedThisProduct);
+          } catch (error) {
+            console.error('Failed to check user reviews:', error);
+          }
         }
       } catch (error) {
         console.error('Failed to load product:', error);
@@ -230,7 +235,7 @@ export const ProductDetailPage: React.FC = () => {
     if (!product) return;
 
     try {
-      await addToCart(product.id, 1);
+      await addToCart(product.id.toString(), 1);
       alert('Product added to cart!');
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -265,7 +270,7 @@ export const ProductDetailPage: React.FC = () => {
 
     try {
       await reviewService.createReview({
-        productId: Number(id),
+        productId: id,
         ...data,
       });
 
@@ -280,7 +285,15 @@ export const ProductDetailPage: React.FC = () => {
       setProduct(updatedProduct);
     } catch (error: any) {
       console.error('Failed to submit review:', error);
-      alert(error.response?.data?.message || 'Failed to submit review. Please try again.');
+      const errorMessage = error.response?.data?.message || '';
+      
+      if (errorMessage.includes('already reviewed') || errorMessage.includes('duplicate')) {
+        setUserHasReviewed(true);
+        setShowReviewForm(false);
+        alert('You have already reviewed this product.');
+      } else {
+        alert(errorMessage || 'Failed to submit review. Please try again.');
+      }
     }
   };
 
@@ -331,7 +344,7 @@ export const ProductDetailPage: React.FC = () => {
           </ImageContainer>
 
           <ProductInfo>
-            <Category>{product.category}</Category>
+            <Category>{typeof product.category === 'string' ? product.category : product.category.name}</Category>
             <Title>{product.name}</Title>
             
             {product.averageRating > 0 && (

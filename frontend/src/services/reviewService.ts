@@ -44,4 +44,9 @@ export const reviewService = {
     const response = await api.put<ApiResponse<Review>>(`/reviews/${id}/helpful`);
     return response.data.data;
   },
+
+  async getUserReviews() {
+    const response = await api.get<ApiResponse<Review[]>>('/reviews/user');
+    return response.data.data;
+  },
 };

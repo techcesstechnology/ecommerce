@@ -186,7 +186,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await addToCart(product.id, 1);
+      await addToCart(product.id.toString(), 1);
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
