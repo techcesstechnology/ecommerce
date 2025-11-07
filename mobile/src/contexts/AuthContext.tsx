@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { api, ApiResponse } from '../services/api';
+import { api, ApiResponse, setUnauthorizedCallback } from '../services/api';
 
 interface User {
   id: string;
@@ -32,8 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const handleUnauthorized = async () => {
+    await SecureStore.deleteItemAsync('authToken');
+    await SecureStore.deleteItemAsync('user');
+    setUser(null);
+  };
+
   useEffect(() => {
     loadUser();
+    setUnauthorizedCallback(handleUnauthorized);
   }, []);
 
   const loadUser = async () => {
@@ -80,9 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('authToken');
-    await SecureStore.deleteItemAsync('user');
-    setUser(null);
+    await handleUnauthorized();
   };
 
   return (
