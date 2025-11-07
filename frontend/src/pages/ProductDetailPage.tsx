@@ -12,6 +12,7 @@ import { Loading } from '../components/common/Loading';
 import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/date';
 import { useAuth } from '../contexts/AuthContext';
+import { ReviewForm } from '../components/review/ReviewForm';
 
 const PageContainer = styled.div`
   padding: ${({ theme }) => `${theme.spacing.xxl} 0`};
@@ -191,6 +192,8 @@ export const ProductDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [userHasReviewed, setUserHasReviewed] = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -207,6 +210,11 @@ export const ProductDetailPage: React.FC = () => {
         if (user) {
           const inWishlist = await wishlistService.isInWishlist(id);
           setIsInWishlist(inWishlist);
+          
+          const hasReviewed = reviewsData.reviews.some(
+            (review: Review) => review.user?.id === Number(user.userId)
+          );
+          setUserHasReviewed(hasReviewed);
         }
       } catch (error) {
         console.error('Failed to load product:', error);
@@ -250,6 +258,38 @@ export const ProductDetailPage: React.FC = () => {
     } finally {
       setWishlistLoading(false);
     }
+  };
+
+  const handleReviewSubmit = async (data: { rating: number; title: string; comment: string }) => {
+    if (!product || !id) return;
+
+    try {
+      await reviewService.createReview({
+        productId: Number(id),
+        ...data,
+      });
+
+      const updatedReviews = await reviewService.getProductReviews(id, 1, 5);
+      setReviews(updatedReviews.reviews);
+      setUserHasReviewed(true);
+      setShowReviewForm(false);
+
+      alert('Review submitted successfully!');
+      
+      const updatedProduct = await productService.getProductById(id);
+      setProduct(updatedProduct);
+    } catch (error: any) {
+      console.error('Failed to submit review:', error);
+      alert(error.response?.data?.message || 'Failed to submit review. Please try again.');
+    }
+  };
+
+  const handleWriteReviewClick = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setShowReviewForm(true);
   };
 
   if (isLoading) {
@@ -345,7 +385,35 @@ export const ProductDetailPage: React.FC = () => {
         </ProductGrid>
 
         <ReviewsSection>
-          <SectionTitle>Customer Reviews</SectionTitle>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <SectionTitle style={{ marginBottom: 0 }}>Customer Reviews</SectionTitle>
+            {!userHasReviewed && !showReviewForm && (
+              <Button onClick={handleWriteReviewClick}>
+                Write a Review
+              </Button>
+            )}
+          </div>
+
+          {showReviewForm && (
+            <ReviewForm
+              productId={id!}
+              onSubmit={handleReviewSubmit}
+              onCancel={() => setShowReviewForm(false)}
+            />
+          )}
+
+          {userHasReviewed && !showReviewForm && (
+            <p style={{ 
+              padding: '1rem', 
+              backgroundColor: '#f0f9ff', 
+              borderRadius: '8px', 
+              marginBottom: '1.5rem',
+              color: '#0066cc'
+            }}>
+              ✓ You have already reviewed this product
+            </p>
+          )}
+
           {reviews.length === 0 ? (
             <p>No reviews yet. Be the first to review this product!</p>
           ) : (
