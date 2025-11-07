@@ -12,6 +12,9 @@ import {
 import { productService, Product } from '../../services/productService';
 import { cartService } from '../../services/cartService';
 import { wishlistService } from '../../services/wishlistService';
+import { reviewService, Review } from '../../services/reviewService';
+import ReviewList from '../../components/ReviewList';
+import ReviewForm from '../../components/ReviewForm';
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const { productId } = route.params;
@@ -19,6 +22,9 @@ export default function ProductDetailScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [inWishlist, setInWishlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [userHasReviewed, setUserHasReviewed] = useState(false);
 
   useEffect(() => {
     loadProduct();
@@ -26,11 +32,25 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
   const loadProduct = async () => {
     try {
-      const data = await productService.getProductById(productId);
-      setProduct(data);
+      const [data, reviewsData, wishlistStatus] = await Promise.all([
+        productService.getProductById(productId),
+        reviewService.getProductReviews(productId, 1, 10),
+        wishlistService.isInWishlist(productId),
+      ]);
 
-      const wishlistStatus = await wishlistService.isInWishlist(productId);
+      setProduct(data);
+      setReviews(reviewsData.reviews);
       setInWishlist(wishlistStatus);
+
+      try {
+        const userReviews = await reviewService.getUserReviews();
+        const hasReviewed = userReviews.some(
+          (review) => Number(review.productId) === Number(productId)
+        );
+        setUserHasReviewed(hasReviewed);
+      } catch (error) {
+        console.error('Failed to check user reviews:', error);
+      }
     } catch (error) {
       console.error('Failed to load product:', error);
       Alert.alert('Error', 'Failed to load product');
@@ -71,6 +91,45 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         'Error',
         error.response?.data?.message || 'Failed to update wishlist'
       );
+    }
+  };
+
+  const handleReviewSubmit = async (data: {
+    rating: number;
+    title: string;
+    comment: string;
+  }) => {
+    try {
+      await reviewService.createReview({
+        productId,
+        ...data,
+      });
+
+      const updatedReviews = await reviewService.getProductReviews(productId, 1, 10);
+      setReviews(updatedReviews.reviews);
+      setUserHasReviewed(true);
+      setShowReviewForm(false);
+
+      Alert.alert('Success', 'Review submitted successfully!');
+
+      const updatedProduct = await productService.getProductById(productId);
+      setProduct(updatedProduct);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || '';
+
+      if (
+        errorMessage.includes('already reviewed') ||
+        errorMessage.includes('duplicate')
+      ) {
+        setUserHasReviewed(true);
+        setShowReviewForm(false);
+        Alert.alert('Info', 'You have already reviewed this product.');
+      } else {
+        Alert.alert(
+          'Error',
+          errorMessage || 'Failed to submit review. Please try again.'
+        );
+      }
     }
   };
 
@@ -159,6 +218,34 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
           </Text>
         </TouchableOpacity>
+
+        <View style={styles.reviewsSection}>
+          <Text style={styles.sectionTitle}>Customer Reviews</Text>
+
+          {!userHasReviewed && !showReviewForm && (
+            <TouchableOpacity
+              style={styles.writeReviewButton}
+              onPress={() => setShowReviewForm(true)}
+            >
+              <Text style={styles.writeReviewButtonText}>Write a Review</Text>
+            </TouchableOpacity>
+          )}
+
+          {userHasReviewed && (
+            <Text style={styles.alreadyReviewedText}>
+              ✓ You have already reviewed this product
+            </Text>
+          )}
+
+          {showReviewForm && (
+            <ReviewForm
+              onSubmit={handleReviewSubmit}
+              onCancel={() => setShowReviewForm(false)}
+            />
+          )}
+
+          <ReviewList reviews={reviews} />
+        </View>
       </View>
     </ScrollView>
   );
@@ -280,5 +367,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  reviewsSection: {
+    marginTop: 30,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  writeReviewButton: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2D6A4F',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  writeReviewButtonText: {
+    color: '#2D6A4F',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  alreadyReviewedText: {
+    fontSize: 14,
+    color: '#2D6A4F',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '600',
   },
 });
