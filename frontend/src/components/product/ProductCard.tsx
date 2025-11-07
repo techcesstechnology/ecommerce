@@ -116,9 +116,9 @@ const OriginalPrice = styled.span`
   text-decoration: line-through;
 `;
 
-const StockInfo = styled.span<{ inStock: boolean }>`
+const StockInfo = styled.span<{ $inStock: boolean }>`
   font-size: ${({ theme }) => theme.fontSizes.sm};
-  color: ${({ inStock, theme }) => (inStock ? theme.colors.success : theme.colors.error)};
+  color: ${({ $inStock, theme }) => ($inStock ? theme.colors.success : theme.colors.error)};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
   margin-bottom: ${({ theme }) => theme.spacing.md};
 `;
@@ -165,7 +165,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {product.isFeatured && !hasDiscount && <Badge type="featured">Featured</Badge>}
       </ImageContainer>
       <Content>
-        <Category>{product.category}</Category>
+        <Category>{typeof product.category === 'string' ? product.category : product.category.name}</Category>
         <Title>{product.name}</Title>
         {product.averageRating > 0 && (
           <Rating>
@@ -173,7 +173,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <ReviewCount>({product.reviewCount})</ReviewCount>
           </Rating>
         )}
-        <StockInfo inStock={product.stockQuantity > 0}>
+        <StockInfo $inStock={product.stockQuantity > 0}>
           {product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
         </StockInfo>
         <PriceContainer>

@@ -4,6 +4,15 @@
 
 FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean market, offering a seamless shopping experience across web and mobile channels. It utilizes a monorepo architecture managing a backend API, a web frontend, a mobile app, and a shared code library. This structure promotes code reuse, consistent typing, and centralized tooling while allowing independent deployments. The platform integrates Zimbabwe-specific features like local payment methods (EcoCash), currency (ZWL), and tax calculations, aiming to address the unique needs of the local market. It includes a complete customer-facing experience with authentication, secure checkout, account management, and a comprehensive backend admin management system for managing all e-commerce operations.
 
+### Recent Schema Fixes (Nov 2025)
+
+Fixed critical database schema mismatch between Drizzle (schema definition) and TypeORM (data access):
+- Updated Product and Category entities to use serial integer IDs instead of UUIDs to match Drizzle schema
+- Added explicit column name mappings for all snake_case database columns (e.g., `created_at`, `image_url`, `display_order`)
+- Implemented decimal-to-number transformers for price fields (price, salePrice, averageRating, weight) to ensure API returns numbers instead of strings
+- Updated frontend types to handle both number and string IDs for backward compatibility during migration
+- ProductCard component now correctly handles category objects returned from API
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

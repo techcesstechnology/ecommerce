@@ -14,7 +14,7 @@ export interface CreateProductDto {
   unit?: string;
   imageUrl?: string;
   images?: string[];
-  categoryId: string;
+  categoryId: number;
   isActive?: boolean;
   isFeatured?: boolean;
   metadata?: Record<string, unknown>;
@@ -30,7 +30,7 @@ export interface UpdateProductDto {
   unit?: string;
   imageUrl?: string;
   images?: string[];
-  categoryId?: string;
+  categoryId?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   metadata?: Record<string, unknown>;
@@ -75,10 +75,10 @@ export class ProductService {
   /**
    * Get product by ID
    */
-  async getProductById(id: string): Promise<Product | null> {
+  async getProductById(id: string | number): Promise<Product | null> {
     try {
       return await this.productRepository.findOne({
-        where: { id },
+        where: { id: Number(id) },
         relations: ['category'],
       });
     } catch (error) {
@@ -144,11 +144,6 @@ export class ProductService {
 
       if (filters.onSale) {
         query.andWhere('product.salePrice IS NOT NULL');
-        query.andWhere('product.saleStartDate <= :now', { now: new Date() });
-        query.andWhere(
-          '(product.saleEndDate IS NULL OR product.saleEndDate >= :now)',
-          { now: new Date() }
-        );
       }
 
       // Pagination
@@ -195,9 +190,9 @@ export class ProductService {
   /**
    * Update a product
    */
-  async updateProduct(id: string, data: UpdateProductDto): Promise<Product | null> {
+  async updateProduct(id: string | number, data: UpdateProductDto): Promise<Product | null> {
     try {
-      const product = await this.productRepository.findOne({ where: { id } });
+      const product = await this.productRepository.findOne({ where: { id: Number(id) } });
       if (!product) {
         return null;
       }
@@ -213,9 +208,9 @@ export class ProductService {
   /**
    * Delete a product (soft delete by setting isActive to false)
    */
-  async deleteProduct(id: string): Promise<boolean> {
+  async deleteProduct(id: string | number): Promise<boolean> {
     try {
-      const result = await this.productRepository.update(id, { isActive: false });
+      const result = await this.productRepository.update(Number(id), { isActive: false });
       return result.affected !== undefined && result.affected > 0;
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -226,9 +221,9 @@ export class ProductService {
   /**
    * Update product stock
    */
-  async updateStock(id: string, quantity: number): Promise<Product | null> {
+  async updateStock(id: string | number, quantity: number): Promise<Product | null> {
     try {
-      const product = await this.productRepository.findOne({ where: { id } });
+      const product = await this.productRepository.findOne({ where: { id: Number(id) } });
       if (!product) {
         return null;
       }
@@ -277,10 +272,10 @@ export class ProductService {
     return this.getProducts({ onSale: true, page, limit });
   }
 
-  async getRelatedProducts(productId: string, limit: number = 4): Promise<Product[] | null> {
+  async getRelatedProducts(productId: string | number, limit: number = 4): Promise<Product[] | null> {
     try {
       const product = await this.productRepository.findOne({
-        where: { id: productId },
+        where: { id: Number(productId) },
         relations: ['category'],
       });
 
@@ -297,7 +292,7 @@ export class ProductService {
         take: limit + 1,
       });
 
-      return relatedProducts.filter((p) => p.id !== productId).slice(0, limit);
+      return relatedProducts.filter((p) => p.id !== Number(productId)).slice(0, limit);
     } catch (error) {
       console.error('Error fetching related products:', error);
       throw new Error('Failed to fetch related products');

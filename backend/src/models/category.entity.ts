@@ -13,8 +13,8 @@ import { Product } from './product.entity';
 @Index(['slug'], { unique: true })
 @Index(['name'])
 export class Category {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ type: 'varchar', length: 255 })
   @Index()
@@ -26,21 +26,27 @@ export class Category {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'integer', nullable: true, name: 'parent_id' })
+  parentId?: number;
+
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'image_url' })
   imageUrl?: string;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
 
-  @Column({ type: 'integer', default: 0 })
+  @Column({ type: 'integer', default: 0, name: 'display_order' })
   sortOrder: number;
+
+  @Column({ type: 'json', nullable: true })
+  metadata?: any;
 
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt: Date;
 }
