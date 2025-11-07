@@ -4,14 +4,28 @@
 
 FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean market, offering a seamless shopping experience across web and mobile channels. It utilizes a monorepo architecture managing a backend API, a web frontend, a mobile app, and a shared code library. This structure promotes code reuse, consistent typing, and centralized tooling while allowing independent deployments. The platform integrates Zimbabwe-specific features like local payment methods (EcoCash), currency (ZWL), and tax calculations, aiming to address the unique needs of the local market. It includes a complete customer-facing experience with authentication, secure checkout, account management, and a comprehensive backend admin management system for managing all e-commerce operations.
 
-### Recent Schema Fixes (Nov 2025)
+### Recent Critical Fixes (Nov 2025)
 
-Fixed critical database schema mismatch between Drizzle (schema definition) and TypeORM (data access):
-- Updated Product and Category entities to use serial integer IDs instead of UUIDs to match Drizzle schema
-- Added explicit column name mappings for all snake_case database columns (e.g., `created_at`, `image_url`, `display_order`)
-- Implemented decimal-to-number transformers for price fields (price, salePrice, averageRating, weight) to ensure API returns numbers instead of strings
-- Updated frontend types to handle both number and string IDs for backward compatibility during migration
-- ProductCard component now correctly handles category objects returned from API
+Fixed critical TypeScript compilation errors preventing deployment by aligning TypeORM entities with existing Drizzle schema:
+
+**Entity Updates** (all now match existing database schema created by Drizzle):
+- Updated Product, Category, CartItem, WishlistItem, and Review entities to use serial integer IDs and foreign keys
+- Added explicit column name mappings for all snake_case database columns (e.g., `created_at`, `product_id`, `user_id`)
+- Implemented decimal-to-number transformers for all price fields to ensure API returns numbers instead of strings
+- No database migrations performed - entities updated to match existing Drizzle-created tables
+
+**Service Layer Fixes** (comprehensive ID validation before all database operations):
+- Added Number.isInteger() validation guards in all service methods (cart, category, order, review, wishlist)
+- All methods now validate string IDs from request parameters and convert to integers before database queries
+- Invalid IDs return controlled 400/500 errors instead of propagating NaN to database
+- CartService, WishlistService, ReviewService - all database operations use validated integer IDs
+- Fixed ReviewService verified purchase check to use proper JOIN with order_items table instead of LIKE search
+
+**Results**:
+- TypeScript compiles successfully with zero errors
+- Backend API runs without type mismatches
+- All endpoints return correct integer IDs and numeric prices
+- Application deployment-ready
 
 ## User Preferences
 
