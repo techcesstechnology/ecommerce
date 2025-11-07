@@ -29,53 +29,43 @@ export class User {
   @Column({ type: 'varchar', length: 50, default: 'customer' })
   role: 'customer' | 'admin' | 'vendor';
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 
   // Email verification fields
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'is_email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'email_verification_token', type: 'varchar', length: 255, nullable: true })
   emailVerificationToken?: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'email_verification_expires', type: 'timestamp', nullable: true })
   emailVerificationExpires?: Date;
 
   // Password reset fields
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'password_reset_token', type: 'varchar', length: 255, nullable: true })
   passwordResetToken?: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'password_reset_expires', type: 'timestamp', nullable: true })
   passwordResetExpires?: Date;
 
   // Two-factor authentication fields
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'two_factor_enabled', type: 'boolean', default: false })
   twoFactorEnabled: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'two_factor_secret', type: 'varchar', length: 255, nullable: true })
   twoFactorSecret?: string;
 
-  // Security tracking fields
-  @Column({ type: 'int', default: 0 })
-  failedLoginAttempts: number;
-
-  @Column({ type: 'timestamp', nullable: true })
-  accountLockedUntil?: Date;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  lastLoginIp?: string;
-
   // Refresh token (stored hash)
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'refresh_token', type: 'varchar', length: 500, nullable: true })
   refreshTokenHash?: string;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
 }
