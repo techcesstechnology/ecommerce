@@ -9,23 +9,28 @@ FreshRoute is a comprehensive e-commerce platform designed for the Zimbabwean ma
 Fixed critical TypeScript compilation errors preventing deployment by aligning TypeORM entities with existing Drizzle schema:
 
 **Entity Updates** (all now match existing database schema created by Drizzle):
-- Updated Product, Category, CartItem, WishlistItem, and Review entities to use serial integer IDs and foreign keys
-- Added explicit column name mappings for all snake_case database columns (e.g., `created_at`, `product_id`, `user_id`)
+- Updated Product, Category, CartItem, WishlistItem, Cart, Wishlist, Review, and Promotion entities to use serial integer IDs and foreign keys
+- Added explicit column name mappings for all snake_case database columns (e.g., `created_at`, `product_id`, `user_id`, `promo_code_id`)
 - Implemented decimal-to-number transformers for all price fields to ensure API returns numbers instead of strings
+- Fixed Promotion entity field names to match promo_codes table: discountType, discountValue, validFrom, validUntil, minOrderValue
+- Fixed Wishlist entity to use isPrivate instead of isPublic (matching database schema)
 - No database migrations performed - entities updated to match existing Drizzle-created tables
 
 **Service Layer Fixes** (comprehensive ID validation before all database operations):
-- Added Number.isInteger() validation guards in all service methods (cart, category, order, review, wishlist)
-- All methods now validate string IDs from request parameters and convert to integers before database queries
+- Added Number.isInteger() validation guards in ALL service methods across CartService, WishlistService, and ReviewService
+- All methods now validate string IDs from request parameters (userId, productId, cartId, wishlistId, reviewId) and convert to integers before database queries
 - Invalid IDs return controlled 400/500 errors instead of propagating NaN to database
-- CartService, WishlistService, ReviewService - all database operations use validated integer IDs
-- Fixed ReviewService verified purchase check to use proper JOIN with order_items table instead of LIKE search
+- CartService: Updated all promo code logic to use correct Promotion field names (validFrom, validUntil, minOrderValue, discountType, discountValue)
+- WishlistService: All 7 methods now validate userId; isPrivate logic corrected throughout
+- ReviewService: All 6 methods now validate userId and reviewId; fixed verified purchase check to use proper JOIN with order_items table
+- CategoryService and OrderService: Existing ID validation maintained
 
 **Results**:
 - TypeScript compiles successfully with zero errors
 - Backend API runs without type mismatches
 - All endpoints return correct integer IDs and numeric prices
 - Application deployment-ready
+- All service methods now consistently validate and convert IDs before database operations
 
 ## User Preferences
 

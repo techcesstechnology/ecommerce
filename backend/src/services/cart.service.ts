@@ -29,13 +29,18 @@ export class CartService {
   }
 
   async getCartByUserId(userId: string): Promise<CartSummary> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     let cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items', 'items.product'],
     });
 
     if (!cart) {
-      cart = this.cartRepository.create({ userId });
+      cart = this.cartRepository.create({ userId: userIdNum });
       await this.cartRepository.save(cart);
       cart.items = [];
     }
@@ -52,6 +57,11 @@ export class CartService {
   ): Promise<CartSummary> {
     if (quantity <= 0) {
       throw new AppError('Quantity must be greater than 0', 400);
+    }
+
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
     }
 
     const productIdNum = Number(productId);
@@ -79,12 +89,12 @@ export class CartService {
     }
 
     let cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items'],
     });
 
     if (!cart) {
-      cart = this.cartRepository.create({ userId });
+      cart = this.cartRepository.create({ userId: userIdNum });
       await this.cartRepository.save(cart);
     }
 
@@ -127,13 +137,18 @@ export class CartService {
       throw new AppError('Quantity cannot be negative', 400);
     }
 
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
     }
 
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!cart) {
@@ -171,13 +186,18 @@ export class CartService {
     userId: string,
     productId: string
   ): Promise<CartSummary> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
     }
 
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!cart) {
@@ -198,8 +218,13 @@ export class CartService {
   }
 
   async clearCart(userId: string): Promise<void> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items'],
     });
 
@@ -208,7 +233,7 @@ export class CartService {
     }
 
     if (cart) {
-      cart.promoCode = undefined;
+      cart.promoCodeId = undefined;
       cart.discount = 0;
       await this.cartRepository.save(cart);
     }
@@ -218,8 +243,13 @@ export class CartService {
     userId: string,
     promoCode: string
   ): Promise<CartSummary> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items', 'items.product'],
     });
 
@@ -236,7 +266,7 @@ export class CartService {
     }
 
     const now = new Date();
-    if (now < promotion.startDate || now > promotion.endDate) {
+    if (now < promotion.validFrom || now > promotion.validUntil) {
       throw new AppError('Promo code has expired or is not yet active', 400);
     }
 
@@ -253,29 +283,29 @@ export class CartService {
     );
 
     if (
-      promotion.minPurchaseAmount &&
-      subtotal < Number(promotion.minPurchaseAmount)
+      promotion.minOrderValue &&
+      subtotal < Number(promotion.minOrderValue)
     ) {
       throw new AppError(
-        `Minimum purchase amount of $${promotion.minPurchaseAmount} required`,
+        `Minimum purchase amount of $${promotion.minOrderValue} required`,
         400
       );
     }
 
     let discount = 0;
-    if (promotion.type === 'percentage') {
-      discount = (subtotal * Number(promotion.value)) / 100;
+    if (promotion.discountType === 'percentage') {
+      discount = (subtotal * Number(promotion.discountValue)) / 100;
       if (
         promotion.maxDiscountAmount &&
         discount > Number(promotion.maxDiscountAmount)
       ) {
         discount = Number(promotion.maxDiscountAmount);
       }
-    } else if (promotion.type === 'fixed') {
-      discount = Number(promotion.value);
+    } else if (promotion.discountType === 'fixed') {
+      discount = Number(promotion.discountValue);
     }
 
-    cart.promoCode = promoCode.toUpperCase();
+    cart.promoCodeId = promotion.id;
     cart.discount = discount;
     await this.cartRepository.save(cart);
 
@@ -283,8 +313,13 @@ export class CartService {
   }
 
   async removePromoCode(userId: string): Promise<CartSummary> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items', 'items.product'],
     });
 
@@ -292,7 +327,7 @@ export class CartService {
       throw new AppError('Cart not found', 404);
     }
 
-    cart.promoCode = undefined;
+    cart.promoCodeId = undefined;
     cart.discount = 0;
     await this.cartRepository.save(cart);
 
@@ -300,25 +335,25 @@ export class CartService {
   }
 
   private async revalidatePromoCode(cart: Cart): Promise<void> {
-    if (!cart.promoCode) {
+    if (!cart.promoCodeId) {
       cart.discount = 0;
       return;
     }
 
     const promotion = await this.promotionRepository.findOne({
-      where: { code: cart.promoCode, isActive: true },
+      where: { id: cart.promoCodeId, isActive: true },
     });
 
     if (!promotion) {
-      cart.promoCode = undefined;
+      cart.promoCodeId = undefined;
       cart.discount = 0;
       await this.cartRepository.save(cart);
       return;
     }
 
     const now = new Date();
-    if (now < promotion.startDate || now > promotion.endDate) {
-      cart.promoCode = undefined;
+    if (now < promotion.validFrom || now > promotion.validUntil) {
+      cart.promoCodeId = undefined;
       cart.discount = 0;
       await this.cartRepository.save(cart);
       return;
@@ -328,7 +363,7 @@ export class CartService {
       promotion.usageLimit &&
       promotion.usageCount >= promotion.usageLimit
     ) {
-      cart.promoCode = undefined;
+      cart.promoCodeId = undefined;
       cart.discount = 0;
       await this.cartRepository.save(cart);
       return;
@@ -340,26 +375,26 @@ export class CartService {
     );
 
     if (
-      promotion.minPurchaseAmount &&
-      subtotal < Number(promotion.minPurchaseAmount)
+      promotion.minOrderValue &&
+      subtotal < Number(promotion.minOrderValue)
     ) {
-      cart.promoCode = undefined;
+      cart.promoCodeId = undefined;
       cart.discount = 0;
       await this.cartRepository.save(cart);
       return;
     }
 
     let discount = 0;
-    if (promotion.type === 'percentage') {
-      discount = (subtotal * Number(promotion.value)) / 100;
+    if (promotion.discountType === 'percentage') {
+      discount = (subtotal * Number(promotion.discountValue)) / 100;
       if (
         promotion.maxDiscountAmount &&
         discount > Number(promotion.maxDiscountAmount)
       ) {
         discount = Number(promotion.maxDiscountAmount);
       }
-    } else if (promotion.type === 'fixed') {
-      discount = Number(promotion.value);
+    } else if (promotion.discountType === 'fixed') {
+      discount = Number(promotion.discountValue);
     }
 
     cart.discount = discount;

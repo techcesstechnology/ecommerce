@@ -37,6 +37,11 @@ export class ReviewService {
       throw new AppError('Rating must be between 1 and 5', 400);
     }
 
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
@@ -51,7 +56,7 @@ export class ReviewService {
     }
 
     const existingReview = await this.reviewRepository.findOne({
-      where: { productId: productIdNum, userId },
+      where: { productId: productIdNum, userId: userIdNum },
     });
 
     if (existingReview) {
@@ -61,14 +66,14 @@ export class ReviewService {
     const hasOrder = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoin('order_items', 'orderItem', 'orderItem.order_id = order.id')
-      .where('order.userId = :userId', { userId })
+      .where('order.userId = :userId', { userId: userIdNum })
       .andWhere('orderItem.product_id = :productId', { productId: productIdNum })
       .andWhere('order.status IN (:...statuses)', { statuses: ['delivered', 'completed'] })
       .getOne();
 
     const review = this.reviewRepository.create({
       productId: productIdNum,
-      userId,
+      userId: userIdNum,
       rating,
       title,
       comment,
@@ -118,10 +123,15 @@ export class ReviewService {
     page: number = 1,
     limit: number = 10
   ): Promise<{ reviews: Review[]; total: number }> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const skip = (page - 1) * limit;
 
     const [reviews, total] = await this.reviewRepository.findAndCount({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['product'],
       order: { createdAt: 'DESC' },
       skip,
@@ -132,8 +142,13 @@ export class ReviewService {
   }
 
   async getReviewById(id: string): Promise<Review> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new AppError('Invalid review ID', 400);
+    }
+
     const review = await this.reviewRepository.findOne({
-      where: { id },
+      where: { id: idNum },
       relations: ['product', 'user'],
     });
 
@@ -145,15 +160,25 @@ export class ReviewService {
   }
 
   async updateReview(id: string, userId: string, data: UpdateReviewDto): Promise<Review> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new AppError('Invalid review ID', 400);
+    }
+
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const review = await this.reviewRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!review) {
       throw new AppError('Review not found', 404);
     }
 
-    if (review.userId !== userId) {
+    if (review.userId !== userIdNum) {
       throw new AppError('You can only update your own reviews', 403);
     }
 
@@ -180,15 +205,25 @@ export class ReviewService {
   }
 
   async deleteReview(id: string, userId: string): Promise<void> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new AppError('Invalid review ID', 400);
+    }
+
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const review = await this.reviewRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!review) {
       throw new AppError('Review not found', 404);
     }
 
-    if (review.userId !== userId) {
+    if (review.userId !== userIdNum) {
       throw new AppError('You can only delete your own reviews', 403);
     }
 
@@ -200,8 +235,13 @@ export class ReviewService {
   }
 
   async markHelpful(reviewId: string): Promise<Review> {
+    const reviewIdNum = Number(reviewId);
+    if (!Number.isInteger(reviewIdNum) || reviewIdNum <= 0) {
+      throw new AppError('Invalid review ID', 400);
+    }
+
     const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
+      where: { id: reviewIdNum },
     });
 
     if (!review) {

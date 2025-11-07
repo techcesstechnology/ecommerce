@@ -13,31 +13,31 @@ import { User } from './user.entity';
 import { WishlistItem } from './wishlist-item.entity';
 
 @Entity('wishlists')
-@Index(['userId'], { unique: true })
+@Index(['userId'])
 export class Wishlist {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'integer', name: 'user_id' })
   @Index()
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @OneToMany(() => WishlistItem, (item) => item.wishlist, { cascade: true })
   items: WishlistItem[];
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  name?: string;
+  @Column({ type: 'varchar', length: 255, default: 'My Wishlist' })
+  name: string;
 
-  @Column({ type: 'boolean', default: false })
-  isPublic: boolean;
+  @Column({ type: 'boolean', name: 'is_private', default: false })
+  isPrivate: boolean;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt: Date;
 }

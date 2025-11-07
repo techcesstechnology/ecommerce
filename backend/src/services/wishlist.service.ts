@@ -17,16 +17,21 @@ export class WishlistService {
   }
 
   async getWishlistByUserId(userId: string): Promise<Wishlist> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     let wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items', 'items.product', 'items.product.category'],
     });
 
     if (!wishlist) {
       wishlist = this.wishlistRepository.create({
-        userId,
+        userId: userIdNum,
         name: 'My Wishlist',
-        isPublic: false,
+        isPrivate: false,
       });
       await this.wishlistRepository.save(wishlist);
       wishlist.items = [];
@@ -40,6 +45,11 @@ export class WishlistService {
     productId: string,
     notes?: string
   ): Promise<Wishlist> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
@@ -57,15 +67,15 @@ export class WishlistService {
     }
 
     let wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items'],
     });
 
     if (!wishlist) {
       wishlist = this.wishlistRepository.create({
-        userId,
+        userId: userIdNum,
         name: 'My Wishlist',
-        isPublic: false,
+        isPrivate: false,
       });
       await this.wishlistRepository.save(wishlist);
     }
@@ -90,13 +100,18 @@ export class WishlistService {
   }
 
   async removeFromWishlist(userId: string, productId: string): Promise<Wishlist> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
     }
 
     const wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!wishlist) {
@@ -121,13 +136,18 @@ export class WishlistService {
     productId: string,
     notes: string
   ): Promise<Wishlist> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       throw new AppError('Invalid product ID', 400);
     }
 
     const wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!wishlist) {
@@ -149,8 +169,13 @@ export class WishlistService {
   }
 
   async clearWishlist(userId: string): Promise<void> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items'],
     });
 
@@ -162,24 +187,29 @@ export class WishlistService {
   async updateWishlistSettings(
     userId: string,
     name?: string,
-    isPublic?: boolean
+    isPrivate?: boolean
   ): Promise<Wishlist> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     let wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!wishlist) {
       wishlist = this.wishlistRepository.create({
-        userId,
+        userId: userIdNum,
         name: name || 'My Wishlist',
-        isPublic: isPublic || false,
+        isPrivate: isPrivate !== undefined ? isPrivate : false,
       });
     } else {
       if (name !== undefined) {
         wishlist.name = name;
       }
-      if (isPublic !== undefined) {
-        wishlist.isPublic = isPublic;
+      if (isPrivate !== undefined) {
+        wishlist.isPrivate = isPrivate;
       }
     }
 
@@ -189,13 +219,18 @@ export class WishlistService {
   }
 
   async checkProductInWishlist(userId: string, productId: string): Promise<boolean> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      return false;
+    }
+
     const productIdNum = Number(productId);
     if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
       return false;
     }
 
     const wishlist = await this.wishlistRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
     });
 
     if (!wishlist) {

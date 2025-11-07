@@ -9,59 +9,84 @@ import {
 
 export type PromotionType = 'percentage' | 'fixed' | 'bogo' | 'free_shipping';
 
-@Entity('promotions')
+@Entity('promo_codes')
 @Index(['code'], { unique: true })
-@Index(['startDate', 'endDate'])
 export class Promotion {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   @Index()
   code: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  name: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  type: PromotionType;
+  @Column({ type: 'varchar', length: 20, name: 'discount_type' })
+  discountType: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  value: number;
+  @Column({ 
+    type: 'decimal', 
+    precision: 10, 
+    scale: 2,
+    name: 'discount_value',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
+  })
+  discountValue: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  minPurchaseAmount?: number;
+  @Column({ 
+    type: 'decimal', 
+    precision: 10, 
+    scale: 2, 
+    nullable: true,
+    name: 'min_order_value',
+    transformer: {
+      to: (value: number | undefined) => value,
+      from: (value: string | null) => value ? parseFloat(value) : null
+    }
+  })
+  minOrderValue?: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ 
+    type: 'decimal', 
+    precision: 10, 
+    scale: 2, 
+    nullable: true,
+    name: 'max_discount_amount',
+    transformer: {
+      to: (value: number | undefined) => value,
+      from: (value: string | null) => value ? parseFloat(value) : null
+    }
+  })
   maxDiscountAmount?: number;
 
-  @Column({ type: 'timestamp' })
-  startDate: Date;
+  @Column({ type: 'timestamp', name: 'valid_from' })
+  validFrom: Date;
 
-  @Column({ type: 'timestamp' })
-  endDate: Date;
+  @Column({ type: 'timestamp', name: 'valid_until' })
+  validUntil: Date;
 
-  @Column({ type: 'integer', nullable: true })
+  @Column({ type: 'integer', nullable: true, name: 'usage_limit' })
   usageLimit?: number;
 
-  @Column({ type: 'integer', default: 0 })
+  @Column({ type: 'integer', default: 0, name: 'usage_count' })
   usageCount: number;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive: boolean;
 
-  @Column({ type: 'simple-array', nullable: true })
-  applicableCategories?: string[];
+  @Column({ type: 'json', nullable: true, name: 'applicable_categories' })
+  applicableCategories?: number[];
 
-  @Column({ type: 'simple-array', nullable: true })
-  applicableProducts?: string[];
+  @Column({ type: 'json', nullable: true, name: 'applicable_products' })
+  applicableProducts?: number[];
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt: Date;
 }
