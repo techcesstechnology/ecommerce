@@ -37,7 +37,7 @@ export interface UpdateProductDto {
 }
 
 export interface ProductFilters {
-  categoryId?: string;
+  categoryId?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   search?: string;
@@ -313,12 +313,17 @@ export class ProductService {
 
   async getCategoryById(id: string): Promise<Category | null> {
     try {
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        throw new Error('Invalid category ID');
+      }
+
       return await this.categoryRepository.findOne({
-        where: { id, isActive: true },
+        where: { id: idNum, isActive: true },
       });
     } catch (error) {
       console.error('Error fetching category:', error);
-      throw new Error('Failed to fetch category');
+      throw error;
     }
   }
 

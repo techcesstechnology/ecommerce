@@ -5,32 +5,30 @@ import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 
 export interface CreatePromotionDto {
   code: string;
-  name: string;
   description?: string;
-  type: PromotionType;
-  value: number;
-  minPurchaseAmount?: number;
+  discountType: PromotionType;
+  discountValue: number;
+  minOrderValue?: number;
   maxDiscountAmount?: number;
-  startDate: Date;
-  endDate: Date;
+  validFrom: Date;
+  validUntil: Date;
   usageLimit?: number;
   isActive?: boolean;
-  applicableCategories?: string[];
-  applicableProducts?: string[];
+  applicableCategories?: number[];
+  applicableProducts?: number[];
 }
 
 export interface UpdatePromotionDto {
-  name?: string;
   description?: string;
-  value?: number;
-  minPurchaseAmount?: number;
+  discountValue?: number;
+  minOrderValue?: number;
   maxDiscountAmount?: number;
-  startDate?: Date;
-  endDate?: Date;
+  validFrom?: Date;
+  validUntil?: Date;
   usageLimit?: number;
   isActive?: boolean;
-  applicableCategories?: string[];
-  applicableProducts?: string[];
+  applicableCategories?: number[];
+  applicableProducts?: number[];
 }
 
 export interface ValidatePromoCodeResult {
@@ -55,7 +53,7 @@ export class PromotionService {
       throw new ConflictError('Promo code already exists');
     }
 
-    if (new Date(data.startDate) >= new Date(data.endDate)) {
+    if (new Date(data.validFrom) >= new Date(data.validUntil)) {
       throw new BadRequestError('End date must be after start date');
     }
 
@@ -68,8 +66,13 @@ export class PromotionService {
   }
 
   async getPromotionById(id: string): Promise<Promotion> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestError('Invalid promotion ID');
+    }
+
     const promotion = await this.promotionRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!promotion) {
@@ -93,39 +96,44 @@ export class PromotionService {
 
   async getAllPromotions(filters?: {
     isActive?: boolean;
-    type?: PromotionType;
+    discountType?: PromotionType;
     current?: boolean;
   }): Promise<Promotion[]> {
     const query = this.promotionRepository.createQueryBuilder('promotion');
 
     if (filters?.isActive !== undefined) {
-      query.andWhere('promotion.isActive = :isActive', { isActive: filters.isActive });
+      query.andWhere('promotion.is_active = :isActive', { isActive: filters.isActive });
     }
 
-    if (filters?.type) {
-      query.andWhere('promotion.type = :type', { type: filters.type });
+    if (filters?.discountType) {
+      query.andWhere('promotion.discount_type = :discountType', { discountType: filters.discountType });
     }
 
     if (filters?.current) {
       const now = new Date();
       query
-        .andWhere('promotion.startDate <= :now', { now })
-        .andWhere('promotion.endDate >= :now', { now });
+        .andWhere('promotion.valid_from <= :now', { now })
+        .andWhere('promotion.valid_until >= :now', { now });
     }
 
-    return await query.orderBy('promotion.createdAt', 'DESC').getMany();
+    return await query.orderBy('promotion.created_at', 'DESC').getMany();
   }
 
   async updatePromotion(id: string, data: UpdatePromotionDto): Promise<Promotion> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestError('Invalid promotion ID');
+    }
+
     const promotion = await this.promotionRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!promotion) {
       throw new NotFoundError('Promotion not found');
     }
 
-    if (data.startDate && data.endDate && new Date(data.startDate) >= new Date(data.endDate)) {
+    if (data.validFrom && data.validUntil && new Date(data.validFrom) >= new Date(data.validUntil)) {
       throw new BadRequestError('End date must be after start date');
     }
 
@@ -134,8 +142,13 @@ export class PromotionService {
   }
 
   async deletePromotion(id: string): Promise<void> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestError('Invalid promotion ID');
+    }
+
     const promotion = await this.promotionRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!promotion) {
@@ -148,8 +161,8 @@ export class PromotionService {
   async validatePromoCode(
     code: string,
     cartTotal: number,
-    categoryIds?: string[],
-    productIds?: string[]
+    categoryIds?: number[],
+    productIds?: number[]
   ): Promise<ValidatePromoCodeResult> {
     try {
       const promotion = await this.getPromotionByCode(code);
@@ -163,11 +176,11 @@ export class PromotionService {
       }
 
       const now = new Date();
-      if (now < promotion.startDate) {
+      if (now < promotion.validFrom) {
         return { valid: false, error: 'Promo code is not yet valid' };
       }
 
-      if (now > promotion.endDate) {
+      if (now > promotion.validUntil) {
         return { valid: false, error: 'Promo code has expired' };
       }
 
@@ -175,10 +188,10 @@ export class PromotionService {
         return { valid: false, error: 'Promo code usage limit reached' };
       }
 
-      if (promotion.minPurchaseAmount && cartTotal < promotion.minPurchaseAmount) {
+      if (promotion.minOrderValue && cartTotal < promotion.minOrderValue) {
         return {
           valid: false,
-          error: `Minimum purchase amount of ${promotion.minPurchaseAmount} required`,
+          error: `Minimum purchase amount of ${promotion.minOrderValue} required`,
         };
       }
 
@@ -218,8 +231,13 @@ export class PromotionService {
   }
 
   async incrementUsageCount(id: string): Promise<Promotion> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestError('Invalid promotion ID');
+    }
+
     const promotion = await this.promotionRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!promotion) {
@@ -231,8 +249,13 @@ export class PromotionService {
   }
 
   async decrementUsageCount(id: string): Promise<Promotion> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new BadRequestError('Invalid promotion ID');
+    }
+
     const promotion = await this.promotionRepository.findOne({
-      where: { id },
+      where: { id: idNum },
     });
 
     if (!promotion) {
@@ -250,13 +273,13 @@ export class PromotionService {
   calculateDiscount(promotion: Promotion, cartTotal: number): number {
     let discount = 0;
 
-    switch (promotion.type) {
+    switch (promotion.discountType) {
       case 'percentage':
-        discount = (cartTotal * promotion.value) / 100;
+        discount = (cartTotal * promotion.discountValue) / 100;
         break;
 
       case 'fixed':
-        discount = promotion.value;
+        discount = promotion.discountValue;
         break;
 
       case 'free_shipping':

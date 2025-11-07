@@ -25,7 +25,7 @@ export interface UpdateOrderDto {
 }
 
 export interface OrderFilters {
-  userId?: string;
+  userId?: number;
   status?: string;
   paymentStatus?: string;
   startDate?: Date;
@@ -66,9 +66,15 @@ export class OrderService {
    */
   async createOrder(data: CreateOrderDto): Promise<Order> {
     try {
+      const userIdNum = Number(data.userId);
+      if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+        throw new AppError('Invalid user ID', 400);
+      }
+
       const orderNumber = await this.generateOrderNumber();
       const order = this.orderRepository.create({
         ...data,
+        userId: userIdNum,
         orderNumber,
         tax: data.tax || 0,
         shippingCost: data.shippingCost || 0,
@@ -76,7 +82,7 @@ export class OrderService {
       return await this.orderRepository.save(order);
     } catch (error) {
       console.error('Error creating order:', error);
-      throw new Error('Failed to create order');
+      throw error;
     }
   }
 
@@ -85,13 +91,18 @@ export class OrderService {
    */
   async getOrderById(id: string): Promise<Order | null> {
     try {
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        throw new AppError('Invalid order ID', 400);
+      }
+
       return await this.orderRepository.findOne({
-        where: { id },
+        where: { id: idNum },
         relations: ['user'],
       });
     } catch (error) {
       console.error('Error fetching order:', error);
-      throw new Error('Failed to fetch order');
+      throw error;
     }
   }
 
@@ -115,6 +126,14 @@ export class OrderService {
    */
   async getOrders(filters: OrderFilters): Promise<{ orders: Order[]; total: number }> {
     try {
+      if (filters.userId !== undefined) {
+        const userIdNum = Number(filters.userId);
+        if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+          throw new AppError('Invalid user ID filter', 400);
+        }
+        filters.userId = userIdNum;
+      }
+
       const query = this.orderRepository
         .createQueryBuilder('order')
         .leftJoinAndSelect('order.user', 'user');
@@ -161,7 +180,7 @@ export class OrderService {
       return { orders, total };
     } catch (error) {
       console.error('Error fetching orders:', error);
-      throw new Error('Failed to fetch orders');
+      throw error;
     }
   }
 
@@ -170,7 +189,12 @@ export class OrderService {
    */
   async updateOrder(id: string, data: UpdateOrderDto): Promise<Order | null> {
     try {
-      const order = await this.orderRepository.findOne({ where: { id } });
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        throw new AppError('Invalid order ID', 400);
+      }
+
+      const order = await this.orderRepository.findOne({ where: { id: idNum } });
       if (!order) {
         return null;
       }
@@ -179,7 +203,7 @@ export class OrderService {
       return await this.orderRepository.save(order);
     } catch (error) {
       console.error('Error updating order:', error);
-      throw new Error('Failed to update order');
+      throw error;
     }
   }
 
@@ -192,10 +216,15 @@ export class OrderService {
     limit: number = 10
   ): Promise<{ orders: Order[]; total: number }> {
     try {
+      const userIdNum = Number(userId);
+      if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+        throw new AppError('Invalid user ID', 400);
+      }
+
       const skip = (page - 1) * limit;
 
       const [orders, total] = await this.orderRepository.findAndCount({
-        where: { userId },
+        where: { userId: userIdNum },
         skip,
         take: limit,
         order: { createdAt: 'DESC' },
@@ -204,7 +233,7 @@ export class OrderService {
       return { orders, total };
     } catch (error) {
       console.error('Error fetching user orders:', error);
-      throw new Error('Failed to fetch user orders');
+      throw error;
     }
   }
 
@@ -261,7 +290,12 @@ export class OrderService {
    */
   async cancelOrder(id: string): Promise<Order | null> {
     try {
-      const order = await this.orderRepository.findOne({ where: { id } });
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        throw new AppError('Invalid order ID', 400);
+      }
+
+      const order = await this.orderRepository.findOne({ where: { id: idNum } });
       if (!order) {
         return null;
       }
@@ -287,13 +321,23 @@ export class OrderService {
     shippingAddress: ShippingAddress,
     paymentMethod: string,
     deliverySlotId?: string,
-    deliveryDate?: Date,
-    deliveryTimeStart?: string,
-    deliveryTimeEnd?: string,
     notes?: string
   ): Promise<Order> {
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
+    let deliverySlotIdNum: number | undefined;
+    if (deliverySlotId) {
+      deliverySlotIdNum = Number(deliverySlotId);
+      if (!Number.isInteger(deliverySlotIdNum) || deliverySlotIdNum <= 0) {
+        throw new AppError('Invalid delivery slot ID', 400);
+      }
+    }
+
     const cart = await this.cartRepository.findOne({
-      where: { userId },
+      where: { userId: userIdNum },
       relations: ['items', 'items.product'],
     });
 
@@ -329,7 +373,7 @@ export class OrderService {
 
     const order = this.orderRepository.create({
       orderNumber,
-      userId,
+      userId: userIdNum,
       items: orderItems,
       subtotal: cartSummary.subtotal,
       tax: cartSummary.tax,
@@ -340,11 +384,8 @@ export class OrderService {
       paymentStatus: 'pending',
       paymentMethod,
       shippingAddress,
-      deliverySlotId,
-      deliveryDate,
-      deliveryTimeStart,
-      deliveryTimeEnd,
-      promoCode: cart.promoCode,
+      deliverySlotId: deliverySlotIdNum,
+      promoCodeId: cart.promoCodeId,
       notes,
     });
 
@@ -362,8 +403,8 @@ export class OrderService {
       );
     }
 
-    if (cart.promoCode) {
-      await this.cartService.incrementPromotionUsage(cart.promoCode);
+    if (cart.promoCodeId) {
+      await this.cartService.incrementPromotionUsage(cart.promoCodeId.toString());
     }
 
     await this.cartService.clearCart(userId);
@@ -375,8 +416,18 @@ export class OrderService {
    * Cancel order and restore inventory
    */
   async cancelOrderWithInventoryRestore(id: string, userId: string): Promise<Order> {
+    const idNum = Number(id);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      throw new AppError('Invalid order ID', 400);
+    }
+
+    const userIdNum = Number(userId);
+    if (!Number.isInteger(userIdNum) || userIdNum <= 0) {
+      throw new AppError('Invalid user ID', 400);
+    }
+
     const order = await this.orderRepository.findOne({
-      where: { id, userId },
+      where: { id: idNum, userId: userIdNum },
     });
 
     if (!order) {
