@@ -17,13 +17,15 @@ Fixed critical TypeScript compilation errors preventing deployment by aligning T
 - No database migrations performed - entities updated to match existing Drizzle-created tables
 
 **Service Layer Fixes** (comprehensive ID validation before all database operations):
-- Added Number.isInteger() validation guards in ALL service methods across CartService, WishlistService, and ReviewService
-- All methods now validate string IDs from request parameters (userId, productId, cartId, wishlistId, reviewId) and convert to integers before database queries
-- Invalid IDs return controlled 400/500 errors instead of propagating NaN to database
+- Added Number.isInteger() validation guards in ALL service methods across CartService, WishlistService, ReviewService, OrderService, PromotionService, and ProductService
+- All methods now validate string IDs from request parameters (userId, productId, cartId, wishlistId, reviewId, orderId, deliverySlotId, categoryId) and convert to integers before database queries
+- Invalid IDs return controlled 400 errors that properly propagate through error handling middleware
 - CartService: Updated all promo code logic to use correct Promotion field names (validFrom, validUntil, minOrderValue, discountType, discountValue)
 - WishlistService: All 7 methods now validate userId; isPrivate logic corrected throughout
 - ReviewService: All 6 methods now validate userId and reviewId; fixed verified purchase check to use proper JOIN with order_items table
-- CategoryService and OrderService: Existing ID validation maintained
+- OrderService: All 8 methods validate IDs; getOrders validates userId filter and uses correct TypeORM property names (order.userId); error handling properly propagates AppError instances
+- PromotionService: All 7 methods validate promotion IDs and use correct field names
+- ProductService: getCategoryById validates categoryId before database queries
 
 **Results**:
 - TypeScript compiles successfully with zero errors
