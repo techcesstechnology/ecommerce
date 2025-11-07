@@ -1,0 +1,284 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { productService, Product } from '../../services/productService';
+import { cartService } from '../../services/cartService';
+import { wishlistService } from '../../services/wishlistService';
+
+export default function ProductDetailScreen({ route, navigation }: any) {
+  const { productId } = route.params;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    loadProduct();
+  }, []);
+
+  const loadProduct = async () => {
+    try {
+      const data = await productService.getProductById(productId);
+      setProduct(data);
+
+      const wishlistStatus = await wishlistService.isInWishlist(productId);
+      setInWishlist(wishlistStatus);
+    } catch (error) {
+      console.error('Failed to load product:', error);
+      Alert.alert('Error', 'Failed to load product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    try {
+      await cartService.addToCart(productId, quantity);
+      Alert.alert('Success', 'Product added to cart!');
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to add to cart'
+      );
+    }
+  };
+
+  const toggleWishlist = async () => {
+    try {
+      if (inWishlist) {
+        const wishlist = await wishlistService.getWishlist();
+        const item = wishlist.find((w) => w.productId === productId);
+        if (item) {
+          await wishlistService.removeFromWishlist(item.id);
+        }
+        setInWishlist(false);
+      } else {
+        await wishlistService.addToWishlist(productId);
+        setInWishlist(true);
+      }
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to update wishlist'
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#2D6A4F" />
+      </View>
+    );
+  }
+
+  if (!product) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text>Product not found</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      {product.imageUrl ? (
+        <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
+      ) : (
+        <View style={styles.productImagePlaceholder}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
+
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.productName}>{product.name}</Text>
+          <TouchableOpacity onPress={toggleWishlist}>
+            <Text style={styles.wishlistIcon}>{inWishlist ? '❤️' : '🤍'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.productPrice}>${product.price.toFixed(2)}</Text>
+
+        {product.averageRating && (
+          <Text style={styles.productRating}>
+            ⭐ {product.averageRating.toFixed(1)} ({product.reviewCount} reviews)
+          </Text>
+        )}
+
+        <Text style={styles.productStock}>
+          {product.stock > 0
+            ? `${product.stock} units in stock`
+            : 'Out of stock'}
+        </Text>
+
+        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.productDescription}>{product.description}</Text>
+
+        <View style={styles.quantityContainer}>
+          <Text style={styles.quantityLabel}>Quantity:</Text>
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              <Text style={styles.quantityButtonText}>-</Text>
+            </TouchableOpacity>
+            <Text style={styles.quantityValue}>{quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() =>
+                setQuantity(Math.min(product.stock, quantity + 1))
+              }
+              disabled={quantity >= product.stock}
+            >
+              <Text style={styles.quantityButtonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.addToCartButton,
+            product.stock === 0 && styles.disabledButton,
+          ]}
+          onPress={handleAddToCart}
+          disabled={product.stock === 0}
+        >
+          <Text style={styles.addToCartButtonText}>
+            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImage: {
+    width: '100%',
+    height: 300,
+  },
+  productImagePlaceholder: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+  },
+  content: {
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  productName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
+  wishlistIcon: {
+    fontSize: 24,
+    marginLeft: 10,
+  },
+  productPrice: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2D6A4F',
+    marginBottom: 10,
+  },
+  productRating: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  productStock: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 10,
+    color: '#333',
+  },
+  productDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  quantityLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 15,
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  quantityButton: {
+    padding: 10,
+    paddingHorizontal: 15,
+  },
+  quantityButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2D6A4F',
+  },
+  quantityValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    paddingHorizontal: 20,
+  },
+  addToCartButton: {
+    backgroundColor: '#2D6A4F',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  addToCartButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
