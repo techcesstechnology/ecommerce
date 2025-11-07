@@ -14,6 +14,8 @@ import { CartPage } from './pages/CartPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { PaymentPage } from './pages/PaymentPage';
+import { PaymentCompletePage } from './pages/PaymentCompletePage';
 import { OrderSuccessPage } from './pages/OrderSuccessPage';
 import { AccountDashboardPage } from './pages/AccountDashboardPage';
 import { OrderHistoryPage } from './pages/OrderHistoryPage';
@@ -89,6 +91,22 @@ function App() {
                           element={
                             <PrivateRoute>
                               <CheckoutPage />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/payment/:orderId"
+                          element={
+                            <PrivateRoute>
+                              <PaymentPage />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/payment/complete"
+                          element={
+                            <PrivateRoute>
+                              <PaymentCompletePage />
                             </PrivateRoute>
                           }
                         />

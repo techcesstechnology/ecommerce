@@ -420,6 +420,49 @@ export const auditLogs = pgTable(
 );
 
 // ============================================================================
+// PAYMENT TRANSACTIONS TABLE
+// ============================================================================
+export const paymentTransactions = pgTable(
+  'payment_transactions',
+  {
+    id: serial('id').primaryKey(),
+    orderId: integer('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    provider: varchar('provider', { length: 50 }).notNull(), // pesepay, paynow, stripe
+    providerTransactionId: varchar('provider_transaction_id', { length: 255 }),
+    pollUrl: varchar('poll_url', { length: 500 }),
+    redirectUrl: varchar('redirect_url', { length: 500 }),
+    paymentMethod: varchar('payment_method', { length: 50 }).notNull(), // ecocash, visa, onemoney
+    paymentMethodCode: varchar('payment_method_code', { length: 20 }), // PZW201 for EcoCash
+    amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+    currency: varchar('currency', { length: 10 }).notNull().default('ZWL'), // ZWL or USD
+    status: varchar('status', { length: 20 }).notNull().default('pending'), // pending, processing, paid, failed, cancelled, refunded
+    customerPhone: varchar('customer_phone', { length: 50 }),
+    customerEmail: varchar('customer_email', { length: 255 }),
+    transactionReference: varchar('transaction_reference', { length: 255 }).notNull(),
+    paymentDescription: text('payment_description'),
+    metadata: json('metadata'),
+    errorMessage: text('error_message'),
+    paidAt: timestamp('paid_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    orderIdx: index('payment_transactions_order_idx').on(table.orderId),
+    userIdx: index('payment_transactions_user_idx').on(table.userId),
+    statusIdx: index('payment_transactions_status_idx').on(table.status),
+    providerTransactionIdx: index('payment_transactions_provider_transaction_idx').on(
+      table.providerTransactionId
+    ),
+    referenceIdx: uniqueIndex('payment_transactions_reference_idx').on(table.transactionReference),
+  })
+);
+
+// ============================================================================
 // RELATIONS (for Drizzle ORM query builder)
 // ============================================================================
 export const usersRelations = relations(users, ({ many }) => ({
@@ -505,6 +548,18 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     references: [deliverySlots.id],
   }),
   items: many(orderItems),
+  paymentTransactions: many(paymentTransactions),
+}));
+
+export const paymentTransactionsRelations = relations(paymentTransactions, ({ one }) => ({
+  order: one(orders, {
+    fields: [paymentTransactions.orderId],
+    references: [orders.id],
+  }),
+  user: one(users, {
+    fields: [paymentTransactions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({

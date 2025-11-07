@@ -112,6 +112,7 @@ export const CheckoutPage: React.FC = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [ecocashPhone, setEcocashPhone] = useState('');
 
   if (!cart || cart.items.length === 0) {
     navigate('/cart');
@@ -128,9 +129,17 @@ export const CheckoutPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate EcoCash phone number if EcoCash is selected
+    if (paymentMethod === 'ecocash' && !ecocashPhone) {
+      setError('Please enter your EcoCash phone number');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Step 1: Create the order
       const order = await orderService.checkout({
         shippingAddress: {
           ...shippingData,
@@ -139,8 +148,23 @@ export const CheckoutPage: React.FC = () => {
         paymentMethod,
       });
 
+      // Step 2: Clear cart
       await clearCart();
-      navigate(`/order-success/${order.id}`);
+
+      // Step 3: Handle payment based on method
+      if (paymentMethod === 'cash') {
+        // For cash on delivery, go directly to success page
+        navigate(`/order-success/${order.id}`);
+      } else {
+        // For EcoCash and card payments, initiate payment
+        navigate(`/payment/${order.id}`, {
+          state: {
+            orderId: order.id,
+            paymentMethod,
+            customerPhone: paymentMethod === 'ecocash' ? ecocashPhone : undefined,
+          },
+        });
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to place order. Please try again.');
     } finally {
@@ -279,6 +303,23 @@ export const CheckoutPage: React.FC = () => {
                     />
                     EcoCash Mobile Money
                   </Label>
+                  {paymentMethod === 'ecocash' && (
+                    <FormGroup style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                      <Label htmlFor="ecocashPhone">EcoCash Phone Number *</Label>
+                      <Input
+                        id="ecocashPhone"
+                        name="ecocashPhone"
+                        type="tel"
+                        value={ecocashPhone}
+                        onChange={(e) => setEcocashPhone(e.target.value)}
+                        placeholder="+263 77 123 4567"
+                        required
+                      />
+                      <small style={{ color: '#666', fontSize: '0.875rem' }}>
+                        Enter the phone number linked to your EcoCash account
+                      </small>
+                    </FormGroup>
+                  )}
                   <Label>
                     <input
                       type="radio"
