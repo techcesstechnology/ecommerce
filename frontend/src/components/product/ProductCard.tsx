@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Product } from '../../types';
 import { formatCurrency } from '../../utils/currency';
 import { Button } from '../common/Button';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { wishlistService } from '../../services/wishlistService';
 import { useNavigate } from 'react-router-dom';
 
 const CardContainer = styled.div`
@@ -51,6 +53,39 @@ const Badge = styled.span<{ type?: 'sale' | 'featured' }>`
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   font-size: ${({ theme }) => theme.fontSizes.sm};
   font-weight: ${({ theme }) => theme.fontWeights.semibold};
+`;
+
+const WishlistIcon = styled.button<{ $isInWishlist: boolean }>`
+  position: absolute;
+  top: ${({ theme }) => theme.spacing.md};
+  left: ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => theme.colors.white};
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: all ${({ theme }) => theme.transitions.fast};
+  z-index: 1;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: ${({ $isInWishlist, theme }) => 
+      $isInWishlist ? theme.colors.secondary : 'none'};
+    stroke: ${({ $isInWishlist, theme }) => 
+      $isInWishlist ? theme.colors.secondary : theme.colors.textMuted};
+    stroke-width: 2;
+  }
 `;
 
 const Content = styled.div`
@@ -129,7 +164,24 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (user) {
+        try {
+          const inWishlist = await wishlistService.isInWishlist(product.id.toString());
+          setIsInWishlist(inWishlist);
+        } catch (error) {
+          console.error('Failed to check wishlist:', error);
+        }
+      }
+    };
+    checkWishlist();
+  }, [product.id, user]);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,6 +189,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       await addToCart(product.id, 1);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    }
+  };
+
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      if (isInWishlist) {
+        await wishlistService.removeFromWishlist(product.id.toString());
+        setIsInWishlist(false);
+      } else {
+        await wishlistService.addToWishlist(product.id.toString());
+        setIsInWishlist(true);
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -161,6 +237,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             e.currentTarget.src = '/placeholder-product.png';
           }}
         />
+        <WishlistIcon
+          onClick={handleToggleWishlist}
+          disabled={wishlistLoading}
+          $isInWishlist={isInWishlist}
+          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </WishlistIcon>
         {hasDiscount && <Badge type="sale">SALE</Badge>}
         {product.isFeatured && !hasDiscount && <Badge type="featured">Featured</Badge>}
       </ImageContainer>

@@ -4,12 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
 import { productService } from '../services/productService';
 import { reviewService } from '../services/reviewService';
+import { wishlistService } from '../services/wishlistService';
 import { useCart } from '../contexts/CartContext';
 import { Container } from '../components/common/Container';
 import { Button } from '../components/common/Button';
 import { Loading } from '../components/common/Loading';
 import { formatCurrency } from '../utils/currency';
 import { formatDate } from '../utils/date';
+import { useAuth } from '../contexts/AuthContext';
 
 const PageContainer = styled.div`
   padding: ${({ theme }) => `${theme.spacing.xxl} 0`};
@@ -121,6 +123,22 @@ const ActionButtons = styled.div`
   margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
+const WishlistButton = styled(Button)<{ $isInWishlist: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: ${({ $isInWishlist, theme }) => 
+      $isInWishlist ? theme.colors.secondary : 'none'};
+    stroke: ${({ $isInWishlist, theme }) => 
+      $isInWishlist ? theme.colors.secondary : 'currentColor'};
+    stroke-width: 2;
+  }
+`;
+
 const ReviewsSection = styled.div`
   background-color: ${({ theme }) => theme.colors.white};
   padding: ${({ theme }) => theme.spacing.xxl};
@@ -167,9 +185,12 @@ export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -182,6 +203,11 @@ export const ProductDetailPage: React.FC = () => {
         ]);
         setProduct(productData);
         setReviews(reviewsData.reviews);
+
+        if (user) {
+          const inWishlist = await wishlistService.isInWishlist(id);
+          setIsInWishlist(inWishlist);
+        }
       } catch (error) {
         console.error('Failed to load product:', error);
       } finally {
@@ -190,7 +216,7 @@ export const ProductDetailPage: React.FC = () => {
     };
 
     loadProduct();
-  }, [id]);
+  }, [id, user]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -200,6 +226,29 @@ export const ProductDetailPage: React.FC = () => {
       alert('Product added to cart!');
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!product || !user) {
+      navigate('/login');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      if (isInWishlist) {
+        await wishlistService.removeFromWishlist(product.id.toString());
+        setIsInWishlist(false);
+      } else {
+        await wishlistService.addToWishlist(product.id.toString());
+        setIsInWishlist(true);
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+      alert('Failed to update wishlist. Please try again.');
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -279,9 +328,18 @@ export const ProductDetailPage: React.FC = () => {
               >
                 Add to Cart
               </Button>
-              <Button variant="outline" size="large">
-                Add to Wishlist
-              </Button>
+              <WishlistButton 
+                variant="outline" 
+                size="large"
+                onClick={handleToggleWishlist}
+                disabled={wishlistLoading}
+                $isInWishlist={isInWishlist}
+              >
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                {isInWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+              </WishlistButton>
             </ActionButtons>
           </ProductInfo>
         </ProductGrid>
