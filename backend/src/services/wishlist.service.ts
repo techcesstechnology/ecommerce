@@ -40,8 +40,12 @@ export class WishlistService {
     productId: string,
     notes?: string
   ): Promise<Wishlist> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id: productIdNum },
     });
 
     if (!product) {
@@ -67,7 +71,7 @@ export class WishlistService {
     }
 
     const existingItem = await this.wishlistItemRepository.findOne({
-      where: { wishlistId: wishlist.id, productId },
+      where: { wishlistId: wishlist.id, productId: productIdNum },
     });
 
     if (existingItem) {
@@ -76,7 +80,7 @@ export class WishlistService {
 
     const wishlistItem = this.wishlistItemRepository.create({
       wishlistId: wishlist.id,
-      productId,
+      productId: productIdNum,
       notes,
     });
 
@@ -86,6 +90,11 @@ export class WishlistService {
   }
 
   async removeFromWishlist(userId: string, productId: string): Promise<Wishlist> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const wishlist = await this.wishlistRepository.findOne({
       where: { userId },
     });
@@ -95,7 +104,7 @@ export class WishlistService {
     }
 
     const wishlistItem = await this.wishlistItemRepository.findOne({
-      where: { wishlistId: wishlist.id, productId },
+      where: { wishlistId: wishlist.id, productId: productIdNum },
     });
 
     if (!wishlistItem) {
@@ -112,6 +121,11 @@ export class WishlistService {
     productId: string,
     notes: string
   ): Promise<Wishlist> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const wishlist = await this.wishlistRepository.findOne({
       where: { userId },
     });
@@ -121,7 +135,7 @@ export class WishlistService {
     }
 
     const wishlistItem = await this.wishlistItemRepository.findOne({
-      where: { wishlistId: wishlist.id, productId },
+      where: { wishlistId: wishlist.id, productId: productIdNum },
     });
 
     if (!wishlistItem) {
@@ -175,6 +189,11 @@ export class WishlistService {
   }
 
   async checkProductInWishlist(userId: string, productId: string): Promise<boolean> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      return false;
+    }
+
     const wishlist = await this.wishlistRepository.findOne({
       where: { userId },
     });
@@ -184,7 +203,7 @@ export class WishlistService {
     }
 
     const item = await this.wishlistItemRepository.findOne({
-      where: { wishlistId: wishlist.id, productId },
+      where: { wishlistId: wishlist.id, productId: productIdNum },
     });
 
     return !!item;

@@ -16,46 +16,49 @@ import { Product } from './product.entity';
 @Index(['userId'])
 @Index(['rating'])
 export class Review {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'integer', name: 'product_id' })
   @Index()
-  productId: string;
+  productId: number;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'productId' })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'integer', name: 'user_id' })
   @Index()
-  userId: string;
+  userId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ type: 'integer', name: 'order_id', nullable: true })
+  orderId?: number;
 
   @Column({ type: 'integer' })
   rating: number;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   title?: string;
 
   @Column({ type: 'text', nullable: true })
   comment?: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', name: 'is_verified_purchase', default: false })
   verifiedPurchase: boolean;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', name: 'is_approved', default: true })
   isApproved: boolean;
 
-  @Column({ type: 'integer', default: 0 })
+  @Column({ type: 'integer', name: 'helpful_count', default: 0 })
   helpfulCount: number;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt: Date;
 }

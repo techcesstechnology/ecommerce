@@ -351,8 +351,12 @@ export class OrderService {
     await this.orderRepository.save(order);
 
     for (const item of cart.items) {
+      const productIdNum = Number(item.productId);
+      if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+        throw new AppError(`Invalid product ID in cart: ${item.productId}`, 500);
+      }
       await this.productRepository.decrement(
-        { id: item.productId },
+        { id: productIdNum },
         'stockQuantity',
         item.quantity
       );
@@ -387,8 +391,12 @@ export class OrderService {
     await this.orderRepository.save(order);
 
     for (const item of order.items as OrderItem[]) {
+      const productIdNum = Number(item.productId);
+      if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+        throw new AppError(`Invalid product ID in order: ${item.productId}`, 500);
+      }
       await this.productRepository.increment(
-        { id: item.productId },
+        { id: productIdNum },
         'stockQuantity',
         item.quantity
       );

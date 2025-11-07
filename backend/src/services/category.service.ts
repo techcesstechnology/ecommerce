@@ -45,8 +45,12 @@ export class CategoryService {
    */
   async getCategoryById(id: string): Promise<Category | null> {
     try {
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        return null;
+      }
       return await this.categoryRepository.findOne({
-        where: { id },
+        where: { id: idNum },
         relations: ['products'],
       });
     } catch (error) {
@@ -102,7 +106,11 @@ export class CategoryService {
    */
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category | null> {
     try {
-      const category = await this.categoryRepository.findOne({ where: { id } });
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        return null;
+      }
+      const category = await this.categoryRepository.findOne({ where: { id: idNum } });
       if (!category) {
         return null;
       }
@@ -120,7 +128,11 @@ export class CategoryService {
    */
   async deleteCategory(id: string): Promise<boolean> {
     try {
-      const result = await this.categoryRepository.update(id, { isActive: false });
+      const idNum = Number(id);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        return false;
+      }
+      const result = await this.categoryRepository.update(idNum, { isActive: false });
       return result.affected !== undefined && result.affected > 0;
     } catch (error) {
       console.error('Error deleting category:', error);

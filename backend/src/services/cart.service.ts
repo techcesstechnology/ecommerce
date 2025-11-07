@@ -54,8 +54,13 @@ export class CartService {
       throw new AppError('Quantity must be greater than 0', 400);
     }
 
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id: productIdNum },
     });
 
     if (!product) {
@@ -84,7 +89,7 @@ export class CartService {
     }
 
     const existingItem = await this.cartItemRepository.findOne({
-      where: { cartId: cart.id, productId },
+      where: { cartId: cart.id, productId: productIdNum },
     });
 
     const finalPrice = product.salePrice || product.price;
@@ -103,7 +108,7 @@ export class CartService {
     } else {
       const cartItem = this.cartItemRepository.create({
         cartId: cart.id,
-        productId,
+        productId: productIdNum,
         quantity,
         price: finalPrice,
       });
@@ -122,6 +127,11 @@ export class CartService {
       throw new AppError('Quantity cannot be negative', 400);
     }
 
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const cart = await this.cartRepository.findOne({
       where: { userId },
     });
@@ -131,7 +141,7 @@ export class CartService {
     }
 
     const cartItem = await this.cartItemRepository.findOne({
-      where: { cartId: cart.id, productId },
+      where: { cartId: cart.id, productId: productIdNum },
       relations: ['product'],
     });
 
@@ -161,6 +171,11 @@ export class CartService {
     userId: string,
     productId: string
   ): Promise<CartSummary> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const cart = await this.cartRepository.findOne({
       where: { userId },
     });
@@ -170,7 +185,7 @@ export class CartService {
     }
 
     const cartItem = await this.cartItemRepository.findOne({
-      where: { cartId: cart.id, productId },
+      where: { cartId: cart.id, productId: productIdNum },
     });
 
     if (!cartItem) {

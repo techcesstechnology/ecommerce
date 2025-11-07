@@ -37,8 +37,13 @@ export class ReviewService {
       throw new AppError('Rating must be between 1 and 5', 400);
     }
 
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
+
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id: productIdNum },
     });
 
     if (!product) {
@@ -46,7 +51,7 @@ export class ReviewService {
     }
 
     const existingReview = await this.reviewRepository.findOne({
-      where: { productId, userId },
+      where: { productId: productIdNum, userId },
     });
 
     if (existingReview) {
@@ -55,13 +60,14 @@ export class ReviewService {
 
     const hasOrder = await this.orderRepository
       .createQueryBuilder('order')
+      .innerJoin('order_items', 'orderItem', 'orderItem.order_id = order.id')
       .where('order.userId = :userId', { userId })
-      .andWhere("order.items::text LIKE :productId", { productId: `%${productId}%` })
+      .andWhere('orderItem.product_id = :productId', { productId: productIdNum })
       .andWhere('order.status IN (:...statuses)', { statuses: ['delivered', 'completed'] })
       .getOne();
 
     const review = this.reviewRepository.create({
-      productId,
+      productId: productIdNum,
       userId,
       rating,
       title,
@@ -72,7 +78,7 @@ export class ReviewService {
 
     await this.reviewRepository.save(review);
 
-    await this.updateProductRating(productId);
+    await this.updateProductRating(productIdNum.toString());
 
     return review;
   }
@@ -82,10 +88,14 @@ export class ReviewService {
     page: number = 1,
     limit: number = 10
   ): Promise<{ reviews: Review[]; total: number; averageRating: number }> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
     const skip = (page - 1) * limit;
 
     const [reviews, total] = await this.reviewRepository.findAndCount({
-      where: { productId, isApproved: true },
+      where: { productId: productIdNum, isApproved: true },
       relations: ['user'],
       order: { createdAt: 'DESC' },
       skip,
@@ -93,7 +103,7 @@ export class ReviewService {
     });
 
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id: productIdNum },
     });
 
     return {
@@ -164,7 +174,7 @@ export class ReviewService {
 
     await this.reviewRepository.save(review);
 
-    await this.updateProductRating(review.productId);
+    await this.updateProductRating(review.productId.toString());
 
     return review;
   }
@@ -182,7 +192,7 @@ export class ReviewService {
       throw new AppError('You can only delete your own reviews', 403);
     }
 
-    const productId = review.productId;
+    const productId = review.productId.toString();
 
     await this.reviewRepository.remove(review);
 
@@ -205,18 +215,23 @@ export class ReviewService {
   }
 
   private async updateProductRating(productId: string): Promise<void> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      return;
+    }
+
     const result = await this.reviewRepository
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'averageRating')
       .addSelect('COUNT(review.id)', 'reviewCount')
-      .where('review.productId = :productId', { productId })
+      .where('review.productId = :productId', { productId: productIdNum })
       .andWhere('review.isApproved = :isApproved', { isApproved: true })
       .getRawOne();
 
     const averageRating = result.averageRating ? parseFloat(result.averageRating) : 0;
     const reviewCount = result.reviewCount ? parseInt(result.reviewCount, 10) : 0;
 
-    await this.productRepository.update(productId, {
+    await this.productRepository.update(productIdNum, {
       averageRating: parseFloat(averageRating.toFixed(2)),
       reviewCount,
     });
@@ -227,8 +242,12 @@ export class ReviewService {
     totalReviews: number;
     ratingDistribution: { rating: number; count: number }[];
   }> {
+    const productIdNum = Number(productId);
+    if (!Number.isInteger(productIdNum) || productIdNum <= 0) {
+      throw new AppError('Invalid product ID', 400);
+    }
     const product = await this.productRepository.findOne({
-      where: { id: productId },
+      where: { id: productIdNum },
     });
 
     if (!product) {
@@ -239,7 +258,7 @@ export class ReviewService {
       .createQueryBuilder('review')
       .select('review.rating', 'rating')
       .addSelect('COUNT(review.id)', 'count')
-      .where('review.productId = :productId', { productId })
+      .where('review.productId = :productId', { productId: productIdNum })
       .andWhere('review.isApproved = :isApproved', { isApproved: true })
       .groupBy('review.rating')
       .orderBy('review.rating', 'DESC')

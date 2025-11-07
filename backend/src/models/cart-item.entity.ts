@@ -14,34 +14,42 @@ import { Product } from './product.entity';
 @Entity('cart_items')
 @Index(['cartId', 'productId'], { unique: true })
 export class CartItem {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'integer', name: 'cart_id' })
   @Index()
-  cartId: string;
+  cartId: number;
 
   @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'cartId' })
+  @JoinColumn({ name: 'cart_id' })
   cart: Cart;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'integer', name: 'product_id' })
   @Index()
-  productId: string;
+  productId: number;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'productId' })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
   @Column({ type: 'integer' })
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ 
+    type: 'decimal', 
+    precision: 10, 
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
+  })
   price: number;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
   updatedAt: Date;
 }
