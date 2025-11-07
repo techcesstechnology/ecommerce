@@ -63,6 +63,16 @@ export class User {
   @Column({ name: 'refresh_token', type: 'varchar', length: 500, nullable: true })
   refreshTokenHash?: string;
 
+  // Security tracking fields
+  @Column({ name: 'failed_login_attempts', type: 'int', default: 0 })
+  failedLoginAttempts: number;
+
+  @Column({ name: 'account_locked_until', type: 'timestamp', nullable: true })
+  accountLockedUntil?: Date;
+
+  @Column({ name: 'last_login_ip', type: 'varchar', length: 45, nullable: true })
+  lastLoginIp?: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
