@@ -18,7 +18,7 @@ export class ProductController {
       } = req.query;
 
       const filters = {
-        categoryId: categoryId as string,
+        categoryId: categoryId ? parseInt(categoryId as string, 10) : undefined,
         minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
         maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
         inStock: inStock === 'true',

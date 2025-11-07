@@ -15,9 +15,6 @@ export class OrderController {
         shippingAddress,
         paymentMethod,
         deliverySlotId,
-        deliveryDate,
-        deliveryTimeStart,
-        deliveryTimeEnd,
         notes,
       } = req.body;
 
@@ -34,9 +31,6 @@ export class OrderController {
         shippingAddress,
         paymentMethod,
         deliverySlotId,
-        deliveryDate,
-        deliveryTimeStart,
-        deliveryTimeEnd,
         notes
       );
 
@@ -101,7 +95,7 @@ export class OrderController {
         return;
       }
 
-      if (order.userId !== userId) {
+      if (order.userId !== Number(userId)) {
         throw new AppError('Unauthorized to view this order', 403);
       }
 
@@ -137,7 +131,7 @@ export class OrderController {
         return;
       }
 
-      if (order.userId !== userId) {
+      if (order.userId !== Number(userId)) {
         throw new AppError('Unauthorized to view this order', 403);
       }
 
