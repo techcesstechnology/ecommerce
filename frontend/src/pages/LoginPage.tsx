@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email.trim(), password.trim());
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
@@ -123,7 +123,7 @@ export const LoginPage: React.FC = () => {
                 required
               />
             </FormGroup>
-            <Button type="submit" fullWidth size="large" disabled={isLoading}>
+            <Button type="submit" $fullWidth size="large" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Log In'}
             </Button>
           </Form>

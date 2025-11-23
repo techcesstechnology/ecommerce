@@ -235,10 +235,10 @@ const ProductsPage: React.FC = () => {
     name: '',
     description: '',
     sku: '',
-    category: '',
+    categoryId: 0,
     price: 0,
-    stock: 0,
-    status: 'active',
+    stockQuantity: 0,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -276,8 +276,8 @@ const ProductsPage: React.FC = () => {
     setPage(1);
   };
 
-  const handleCategoryFilter = (category: string) => {
-    setFilters({ ...filters, category: category || undefined });
+  const handleCategoryFilter = (categoryId: string) => {
+    setFilters({ ...filters, categoryId: categoryId ? parseInt(categoryId) : undefined });
     setPage(1);
   };
 
@@ -292,10 +292,10 @@ const ProductsPage: React.FC = () => {
       name: '',
       description: '',
       sku: '',
-      category: '',
+      categoryId: 0,
       price: 0,
-      stock: 0,
-      status: 'active',
+      stockQuantity: 0,
+      isActive: true,
     });
     setShowModal(true);
   };
@@ -304,23 +304,21 @@ const ProductsPage: React.FC = () => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      description: product.description,
+      description: product.description || '',
       sku: product.sku,
-      category: product.category,
-      subcategory: product.subcategory,
+      categoryId: product.categoryId,
       price: product.price,
-      salePrice: product.salePrice,
-      stock: product.stock,
-      status: product.status,
+      stockQuantity: product.stockQuantity,
+      isActive: product.isActive,
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      await productService.deleteProduct(id);
+      await productService.deleteProduct(id.toString());
       fetchProducts();
     } catch (error) {
       console.error('Failed to delete product:', error);
@@ -333,7 +331,7 @@ const ProductsPage: React.FC = () => {
 
     try {
       if (editingProduct) {
-        await productService.updateProduct(editingProduct.id, formData);
+        await productService.updateProduct(editingProduct.id.toString(), formData);
       } else {
         await productService.createProduct(formData);
       }
@@ -366,7 +364,7 @@ const ProductsPage: React.FC = () => {
         <Select onChange={(e) => handleCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.name}>
+            <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>
           ))}
@@ -399,8 +397,8 @@ const ProductsPage: React.FC = () => {
               {products.map((product) => (
                 <TableRow key={product.id}>
                   <TableData>
-                    <ProductImage 
-                      src={product.images?.[0] || '/placeholder.png'} 
+                    <ProductImage
+                      src={product.images?.[0] || '/placeholder.png'}
                       alt={product.name}
                       onError={(e) => {
                         e.currentTarget.src = '/placeholder.png';
@@ -409,11 +407,13 @@ const ProductsPage: React.FC = () => {
                   </TableData>
                   <TableData>{product.name}</TableData>
                   <TableData>{product.sku}</TableData>
-                  <TableData>{product.category}</TableData>
+                  <TableData>{product.category?.name}</TableData>
                   <TableData>{formatCurrency(product.price)}</TableData>
-                  <TableData>{product.stock}</TableData>
+                  <TableData>{product.stockQuantity}</TableData>
                   <TableData>
-                    <StatusBadge $status={product.status}>{product.status}</StatusBadge>
+                    <StatusBadge $status={product.isActive ? 'active' : 'inactive'}>
+                      {product.isActive ? 'Active' : 'Inactive'}
+                    </StatusBadge>
                   </TableData>
                   <TableData>
                     <ActionButtons>
@@ -464,7 +464,6 @@ const ProductsPage: React.FC = () => {
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
               />
             </FormGroup>
 
@@ -481,13 +480,13 @@ const ProductsPage: React.FC = () => {
             <FormGroup>
               <Label>Category</Label>
               <Select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
                 required
               >
-                <option value="">Select Category</option>
+                <option value={0}>Select Category</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
+                  <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
@@ -509,8 +508,8 @@ const ProductsPage: React.FC = () => {
               <Label>Stock</Label>
               <Input
                 type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                value={formData.stockQuantity}
+                onChange={(e) => setFormData({ ...formData, stockQuantity: parseInt(e.target.value) })}
                 required
               />
             </FormGroup>
@@ -518,12 +517,11 @@ const ProductsPage: React.FC = () => {
             <FormGroup>
               <Label>Status</Label>
               <Select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                value={formData.isActive ? 'active' : 'inactive'}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'active' })}
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-                <option value="draft">Draft</option>
               </Select>
             </FormGroup>
 

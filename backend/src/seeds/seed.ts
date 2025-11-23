@@ -3,6 +3,7 @@ import { AppDataSource } from '../config/database.config';
 import { User } from '../models/user.entity';
 import { Category } from '../models/category.entity';
 import { Product } from '../models/product.entity';
+import * as bcrypt from 'bcrypt';
 
 /**
  * Seed database with initial data
@@ -23,17 +24,21 @@ async function seed() {
     const productRepository = AppDataSource.getRepository(Product);
 
     // Clear existing data (optional - remove in production)
+    // Clear existing data (optional - remove in production)
     console.log('🧹 Clearing existing data...');
-    await productRepository.delete({});
-    await categoryRepository.delete({});
-    await userRepository.delete({});
+    await AppDataSource.query('TRUNCATE TABLE "users", "categories", "products" RESTART IDENTITY CASCADE');
 
     // Seed Users
     console.log('👥 Creating users...');
+
+    // Hash passwords (using bcrypt with salt rounds of 10)
+    const defaultPassword = 'Admin@123'; // Default password for all users
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
     const adminUser = userRepository.create({
       email: 'admin@freshroute.co.zw',
       name: 'Admin User',
-      password: 'hashed_password_here', // In production, use bcrypt or similar
+      password: hashedPassword,
       role: 'admin',
       phone: '+263771234567',
     });
@@ -41,7 +46,7 @@ async function seed() {
     const vendorUser = userRepository.create({
       email: 'vendor@freshroute.co.zw',
       name: 'Vendor User',
-      password: 'hashed_password_here',
+      password: hashedPassword,
       role: 'vendor',
       phone: '+263772345678',
     });
@@ -49,13 +54,19 @@ async function seed() {
     const customerUser = userRepository.create({
       email: 'customer@freshroute.co.zw',
       name: 'Customer User',
-      password: 'hashed_password_here',
+      password: hashedPassword,
       role: 'customer',
       phone: '+263773456789',
     });
 
     await userRepository.save([adminUser, vendorUser, customerUser]);
     console.log('✅ Created 3 users');
+    console.log('');
+    console.log('📝 Default credentials:');
+    console.log('   Admin:    admin@freshroute.co.zw / Admin@123');
+    console.log('   Vendor:   vendor@freshroute.co.zw / Admin@123');
+    console.log('   Customer: customer@freshroute.co.zw / Admin@123');
+    console.log('');
 
     // Seed Categories
     console.log('📦 Creating categories...');
@@ -244,6 +255,8 @@ async function seed() {
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding database:', error);
+    const fs = require('fs');
+    fs.writeFileSync('seed_error.txt', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     process.exit(1);
   }
 }

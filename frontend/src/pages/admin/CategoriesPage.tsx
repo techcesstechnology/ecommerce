@@ -184,7 +184,7 @@ const CategoriesPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateCategoryDto>({
     name: '',
     description: '',
-    status: 'active',
+    isActive: true,
   });
 
   useEffect(() => {
@@ -208,7 +208,7 @@ const CategoriesPage: React.FC = () => {
     setFormData({
       name: '',
       description: '',
-      status: 'active',
+      isActive: true,
     });
     setShowModal(true);
   };
@@ -218,12 +218,12 @@ const CategoriesPage: React.FC = () => {
     setFormData({
       name: category.name,
       description: category.description || '',
-      status: category.status,
+      isActive: category.isActive,
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
@@ -271,7 +271,9 @@ const CategoriesPage: React.FC = () => {
               {category.description || 'No description'}
             </CategoryDescription>
             <CategoryMeta>
-              <StatusBadge $status={category.status}>{category.status}</StatusBadge>
+              <StatusBadge $status={category.isActive ? 'active' : 'inactive'}>
+                {category.isActive ? 'Active' : 'Inactive'}
+              </StatusBadge>
               <ProductCount>{category.productCount || 0} products</ProductCount>
             </CategoryMeta>
             <CardActions>
@@ -309,8 +311,8 @@ const CategoriesPage: React.FC = () => {
             <FormGroup>
               <Label>Status</Label>
               <Select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                value={formData.isActive ? 'active' : 'inactive'}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'active' })}
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>

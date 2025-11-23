@@ -146,8 +146,9 @@ class ConfigService {
    */
   private buildDatabaseConfig(env: Environment): DatabaseConfig {
     // Check if DATABASE_URL is available (Replit/production standard)
-    const databaseUrl = getOptionalEnv(ENV_KEYS.DATABASE_URL, '');
-    
+    // Force disable DATABASE_URL to use individual params due to encoding issues
+    const databaseUrl = ''; // getOptionalEnv(ENV_KEYS.DATABASE_URL, '');
+
     if (databaseUrl) {
       // Parse DATABASE_URL (format: postgresql://user:password@host:port/database)
       try {
@@ -156,8 +157,8 @@ class ConfigService {
           host: url.hostname,
           port: parseInt(url.port) || 5432,
           name: url.pathname.slice(1), // Remove leading slash
-          user: url.username,
-          password: url.password,
+          user: decodeURIComponent(url.username),
+          password: decodeURIComponent(url.password),
           sync: parseBoolean(process.env[ENV_KEYS.DB_SYNC], env === Environment.DEVELOPMENT),
           logging: parseBoolean(process.env[ENV_KEYS.DB_LOGGING], env === Environment.DEVELOPMENT),
           ssl: parseBoolean(process.env[ENV_KEYS.DB_SSL], true), // Default to true for DATABASE_URL
@@ -271,7 +272,7 @@ class ConfigService {
    */
   private buildRedisConfig(): RedisConfig {
     const redisUrl = getOptionalEnv(ENV_KEYS.REDIS_URL, '');
-    
+
     return {
       url: redisUrl || undefined,
       host: getOptionalEnv(ENV_KEYS.REDIS_HOST, 'localhost'),
@@ -424,10 +425,10 @@ class ConfigService {
       ENV_KEYS.ANALYTICS_PROVIDER,
       'mock'
     );
-    
+
     // Validate provider value
     const validProviders = ['segment', 'mixpanel', 'amplitude', 'mock'];
-    const validatedProvider = validProviders.includes(provider) 
+    const validatedProvider = validProviders.includes(provider)
       ? (provider as AnalyticsConfig['provider'])
       : 'mock';
 

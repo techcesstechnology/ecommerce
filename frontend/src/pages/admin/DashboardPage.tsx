@@ -277,8 +277,8 @@ const DashboardPage: React.FC = () => {
           {recentProducts.map((product) => (
             <TableRow key={product.id}>
               <TableData>
-                <ProductImage 
-                  src={product.images?.[0] || '/placeholder.png'} 
+                <ProductImage
+                  src={product.images?.[0] || '/placeholder.png'}
                   alt={product.name}
                   onError={(e) => {
                     e.currentTarget.src = '/placeholder.png';
@@ -288,9 +288,11 @@ const DashboardPage: React.FC = () => {
               <TableData>{product.name}</TableData>
               <TableData>{product.sku}</TableData>
               <TableData>{formatCurrency(product.price)}</TableData>
-              <TableData>{product.stock}</TableData>
+              <TableData>{product.stockQuantity}</TableData>
               <TableData>
-                <StatusBadge $status={product.status}>{product.status}</StatusBadge>
+                <StatusBadge $status={product.isActive ? 'active' : 'inactive'}>
+                  {product.isActive ? 'Active' : 'Inactive'}
+                </StatusBadge>
               </TableData>
             </TableRow>
           ))}

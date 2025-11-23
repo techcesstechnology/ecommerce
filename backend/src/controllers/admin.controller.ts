@@ -413,7 +413,28 @@ export class AdminController {
 
   getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
     try {
-      const stats = await orderService.getOrderStats();
+      const [orderStats, products, categories] = await Promise.all([
+        orderService.getOrderStats(),
+        productService.getProducts({ limit: 1 }), // Just to get total count
+        productService.getCategories(),
+      ]);
+
+      const lowStockProducts = await productService.getLowStockProducts();
+
+      const stats = {
+        totalProducts: products.total,
+        activeProducts: products.total, // Simplified for now
+        lowStockProducts: lowStockProducts.length,
+        outOfStockProducts: lowStockProducts.filter(p => p.stockQuantity === 0).length,
+        totalCategories: categories.length,
+        activeCategories: categories.length,
+        totalInventoryValue: 0, // Would need to aggregate all products
+        totalOrders: orderStats.totalOrders,
+        pendingOrders: orderStats.statusBreakdown['pending'] || 0,
+        completedOrders: orderStats.statusBreakdown['delivered'] || 0,
+        totalRevenue: orderStats.totalRevenue,
+        todayRevenue: 0, // Would need separate query
+      };
 
       res.status(200).json({
         success: true,
@@ -423,6 +444,63 @@ export class AdminController {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch dashboard statistics',
+      });
+    }
+  };
+
+  getInventoryAlerts = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const products = await productService.getLowStockProducts();
+
+      const alerts = products.map(p => ({
+        productId: p.id,
+        productName: p.name,
+        sku: p.sku,
+        currentStock: p.stockQuantity,
+        minimumStock: p.lowStockThreshold || 0,
+        status: p.stockQuantity === 0 ? 'out' : 'low'
+      }));
+
+      res.status(200).json({
+        success: true,
+        data: alerts,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch inventory alerts',
+      });
+    }
+  };
+
+  getSalesSummary = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const summary = await orderService.getSalesSummary();
+
+      res.status(200).json({
+        success: true,
+        data: summary,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch sales summary',
+      });
+    }
+  };
+
+  getAnalytics = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const analytics = await orderService.getAnalytics();
+
+      res.status(200).json({
+        success: true,
+        data: analytics,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch analytics',
       });
     }
   };

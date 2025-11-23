@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useSearchParams } from 'react-router-dom';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 import { productService, ProductFilters } from '../services/productService';
 import { ProductCard } from '../components/product/ProductCard';
 import { Container } from '../components/common/Container';
@@ -120,7 +120,7 @@ const Pagination = styled.div`
   margin-top: ${({ theme }) => theme.spacing.xxl};
 `;
 
-const PageButton = styled(Button)<{ active?: boolean }>`
+const PageButton = styled(Button) <{ active?: boolean; $variant?: string }>`
   ${({ active, theme }) =>
     active &&
     `
@@ -151,7 +151,7 @@ export const ProductListPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const category = searchParams.get('category') || '';
@@ -244,8 +244,8 @@ export const ProductListPage: React.FC = () => {
                 >
                   <option value="">All Categories</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
                     </option>
                   ))}
                 </Select>
@@ -288,7 +288,7 @@ export const ProductListPage: React.FC = () => {
 
               <Button
                 variant="outline"
-                fullWidth
+                $fullWidth
                 onClick={() => {
                   setSearchParams(new URLSearchParams());
                 }}
@@ -344,7 +344,7 @@ export const ProductListPage: React.FC = () => {
                 {totalPages > 1 && (
                   <Pagination>
                     <PageButton
-                      variant="outline"
+                      $variant="outline"
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
@@ -361,7 +361,7 @@ export const ProductListPage: React.FC = () => {
                         <React.Fragment key={page}>
                           {index > 0 && array[index - 1] !== page - 1 && <span>...</span>}
                           <PageButton
-                            variant={page === currentPage ? 'primary' : 'outline'}
+                            $variant={page === currentPage ? 'primary' : 'outline'}
                             onClick={() => handlePageChange(page)}
                           >
                             {page}
@@ -369,7 +369,7 @@ export const ProductListPage: React.FC = () => {
                         </React.Fragment>
                       ))}
                     <PageButton
-                      variant="outline"
+                      $variant="outline"
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >

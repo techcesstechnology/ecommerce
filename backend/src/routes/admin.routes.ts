@@ -48,5 +48,8 @@ router.put('/promotions/:id', validate(updatePromotionValidation), adminControll
 router.delete('/promotions/:id', validate(idParamValidation), adminController.deletePromotion);
 
 router.get('/dashboard/stats', adminController.getDashboardStats);
+router.get('/dashboard/inventory-alerts', adminController.getInventoryAlerts);
+router.get('/dashboard/sales-summary', adminController.getSalesSummary);
+router.get('/analytics', adminController.getAnalytics);
 
 export default router;

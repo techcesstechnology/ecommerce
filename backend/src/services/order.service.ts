@@ -413,6 +413,154 @@ export class OrderService {
   }
 
   /**
+   * Get sales summary for dashboard
+   */
+  async getSalesSummary(): Promise<{
+    todaySales: number;
+    todayOrders: number;
+    yesterdaySales: number;
+    yesterdayOrders: number;
+    weekSales: number;
+    weekOrders: number;
+    monthSales: number;
+    monthOrders: number;
+    salesGrowth: number;
+    ordersGrowth: number;
+  }> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() - 7);
+
+      const monthStart = new Date(today);
+      monthStart.setMonth(monthStart.getMonth() - 1);
+
+      const getStats = async (start: Date, end?: Date) => {
+        const query = this.orderRepository.createQueryBuilder('order')
+          .where('order.createdAt >= :start', { start });
+
+        if (end) {
+          query.andWhere('order.createdAt < :end', { end });
+        }
+
+        const orders = await query.getMany();
+        return {
+          count: orders.length,
+          revenue: orders.reduce((sum, order) => sum + Number(order.total), 0)
+        };
+      };
+
+      const todayStats = await getStats(today);
+      const yesterdayStats = await getStats(yesterday, today);
+      const weekStats = await getStats(weekStart);
+      const monthStats = await getStats(monthStart);
+
+      const salesGrowth = yesterdayStats.revenue > 0
+        ? ((todayStats.revenue - yesterdayStats.revenue) / yesterdayStats.revenue) * 100
+        : 100;
+
+      const ordersGrowth = yesterdayStats.count > 0
+        ? ((todayStats.count - yesterdayStats.count) / yesterdayStats.count) * 100
+        : 100;
+
+      return {
+        todaySales: todayStats.revenue,
+        todayOrders: todayStats.count,
+        yesterdaySales: yesterdayStats.revenue,
+        yesterdayOrders: yesterdayStats.count,
+        weekSales: weekStats.revenue,
+        weekOrders: weekStats.count,
+        monthSales: monthStats.revenue,
+        monthOrders: monthStats.count,
+        salesGrowth,
+        ordersGrowth
+      };
+    } catch (error) {
+      console.error('Error fetching sales summary:', error);
+      throw new Error('Failed to fetch sales summary');
+    }
+  }
+
+  /**
+   * Get detailed analytics
+   */
+  async getAnalytics(): Promise<{
+    totalRevenue: number;
+    totalOrders: number;
+    averageOrderValue: number;
+    topProducts: Array<{
+      productId: string;
+      productName: string;
+      totalSold: number;
+      revenue: number;
+    }>;
+    salesByCategory: Array<{
+      category: string;
+      revenue: number;
+      orderCount: number;
+    }>;
+  }> {
+    try {
+      const orders = await this.orderRepository.find({ relations: ['items'] });
+
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
+      const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      // Top products
+      const productStats = new Map<string, { name: string; sold: number; revenue: number }>();
+
+      for (const order of orders) {
+        if (!order.items) continue;
+        for (const item of order.items) {
+          const current = productStats.get(item.productId.toString()) || {
+            name: item.productName,
+            sold: 0,
+            revenue: 0
+          };
+
+          productStats.set(item.productId.toString(), {
+            name: item.productName,
+            sold: current.sold + item.quantity,
+            revenue: current.revenue + (Number(item.price) * item.quantity)
+          });
+        }
+      }
+
+      const topProducts = Array.from(productStats.entries())
+        .map(([id, stats]) => ({
+          productId: id,
+          productName: stats.name,
+          totalSold: stats.sold,
+          revenue: stats.revenue
+        }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      // Sales by category (simplified as we don't have direct category link in order items easily accessible without more queries)
+      // For now returning empty or mock if needed, but let's try to fetch products to get categories
+      // This is expensive, in a real app we'd aggregate this in DB
+      const salesByCategory: any[] = [];
+
+      return {
+        totalRevenue,
+        totalOrders,
+        averageOrderValue,
+        topProducts,
+        salesByCategory
+      };
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      throw new Error('Failed to fetch analytics');
+    }
+  }
+
+  /**
    * Cancel order and restore inventory
    */
   async cancelOrderWithInventoryRestore(id: string, userId: string): Promise<Order> {

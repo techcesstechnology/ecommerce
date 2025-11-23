@@ -332,10 +332,10 @@ const OrdersPage: React.FC = () => {
                 <TableRow key={order.id} onClick={() => handleOrderClick(order)}>
                   <TableData>{order.orderNumber}</TableData>
                   <TableData>
-                    {order.shippingAddress.firstName} {order.shippingAddress.lastName}
+                    {order.shippingAddress.fullName}
                   </TableData>
-                  <TableData>{formatDate(order.orderDate)}</TableData>
-                  <TableData>{formatCurrency(order.totalAmount)}</TableData>
+                  <TableData>{formatDate(order.createdAt)}</TableData>
+                  <TableData>{formatCurrency(order.total)}</TableData>
                   <TableData>
                     <StatusBadge $status={order.status}>{order.status}</StatusBadge>
                   </TableData>
@@ -372,17 +372,13 @@ const OrdersPage: React.FC = () => {
             <OrderDetail>
               <DetailRow>
                 <DetailLabel>Order Date:</DetailLabel>
-                <DetailValue>{formatDate(selectedOrder.orderDate)}</DetailValue>
+                <DetailValue>{formatDate(selectedOrder.createdAt)}</DetailValue>
               </DetailRow>
               <DetailRow>
                 <DetailLabel>Customer:</DetailLabel>
                 <DetailValue>
-                  {selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}
+                  {selectedOrder.shippingAddress.fullName}
                 </DetailValue>
-              </DetailRow>
-              <DetailRow>
-                <DetailLabel>Email:</DetailLabel>
-                <DetailValue>{selectedOrder.shippingAddress.email}</DetailValue>
               </DetailRow>
               <DetailRow>
                 <DetailLabel>Phone:</DetailLabel>
@@ -406,7 +402,7 @@ const OrdersPage: React.FC = () => {
               {selectedOrder.items.map((item, index) => (
                 <ItemRow key={index}>
                   <div>
-                    <div>{item.productName}</div>
+                    <div>{item.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#999' }}>
                       {formatCurrency(item.price)} × {item.quantity}
                     </div>
@@ -428,7 +424,7 @@ const OrdersPage: React.FC = () => {
               </ItemRow>
               <ItemRow style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
                 <DetailLabel>Total:</DetailLabel>
-                <DetailValue>{formatCurrency(selectedOrder.totalAmount)}</DetailValue>
+                <DetailValue>{formatCurrency(selectedOrder.total)}</DetailValue>
               </ItemRow>
             </OrderItems>
 

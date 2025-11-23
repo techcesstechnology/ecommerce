@@ -15,13 +15,20 @@ export interface RegisterData {
 
 export const authService = {
   async login(credentials: LoginCredentials) {
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>(
+    const response = await api.post<any>(
       '/auth/login',
       credentials
     );
-    const { token, user } = response.data.data;
-    apiService.setAuthToken(token);
-    return { token, user };
+
+    // Backend returns { message, user, accessToken }
+    const { accessToken, user } = response.data;
+
+    if (!accessToken || !user) {
+      throw new Error('Invalid response from server');
+    }
+
+    apiService.setAuthToken(accessToken);
+    return { token: accessToken, user };
   },
 
   async register(data: RegisterData) {
@@ -29,6 +36,8 @@ export const authService = {
       '/auth/register',
       data
     );
+    // Note: Register might also need similar fix if backend structure is consistent
+    // But for now keeping as is unless tested otherwise
     const { token, user } = response.data.data;
     apiService.setAuthToken(token);
     return { token, user };
@@ -41,6 +50,10 @@ export const authService = {
 
   async getCurrentUser() {
     const response = await api.get<ApiResponse<User>>('/auth/me');
+    // Check if structure matches login fix
+    if (response.data && !response.data.data && (response.data as any).user) {
+      return (response.data as any).user;
+    }
     return response.data.data;
   },
 

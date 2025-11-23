@@ -2,13 +2,13 @@ import { api } from './api';
 import { ApiResponse, PaginatedResponse } from '../types';
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   description: string | null;
   slug: string;
-  parentId: string | null;
-  status: 'active' | 'inactive';
-  displayOrder: number;
+  parentId: number | null;
+  isActive: boolean;
+  sortOrder: number;
   productCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -17,17 +17,17 @@ export interface Category {
 export interface CreateCategoryDto {
   name: string;
   description?: string;
-  parentId?: string;
-  status?: 'active' | 'inactive';
-  displayOrder?: number;
+  parentId?: number;
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 export interface UpdateCategoryDto {
   name?: string;
   description?: string;
-  parentId?: string;
-  status?: 'active' | 'inactive';
-  displayOrder?: number;
+  parentId?: number;
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 export const categoryService = {
@@ -36,7 +36,7 @@ export const categoryService = {
     return response.data.data;
   },
 
-  async getCategoryById(id: string) {
+  async getCategoryById(id: number) {
     const response = await api.get<ApiResponse<Category>>(`/categories/${id}`);
     return response.data.data;
   },
@@ -51,12 +51,12 @@ export const categoryService = {
     return response.data.data;
   },
 
-  async updateCategory(id: string, data: UpdateCategoryDto) {
+  async updateCategory(id: number, data: UpdateCategoryDto) {
     const response = await api.put<ApiResponse<Category>>(`/categories/${id}`, data);
     return response.data.data;
   },
 
-  async deleteCategory(id: string) {
+  async deleteCategory(id: number) {
     const response = await api.delete<ApiResponse<void>>(`/categories/${id}`);
     return response.data;
   },
